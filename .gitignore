@@ -1,0 +1,18 @@
+# Python & Virtualenv
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.venv/
+
+# SQLite Database
+*.db
+*.sqlite3
+
+# PyTest Cache
+.pytest_cache/
+
+# OS / Editor junk
+.DS_Store
+*.log
