@@ -1,305 +1,2247 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Smart Krishi AI - Mobile & IoT Agriculture Assistant</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Krishi AI</title>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #07110d;
+            --panel: #0d1b15;
+            --panel-2: #11231b;
+            --border: rgba(255,255,255,0.08);
+            --text: #f4f8f5;
+            --muted: #91a69b;
+            --primary: #4ade80;
+            --primary-dark: #1f9d55;
+            --warning: #f5b942;
+            --danger: #ef6b73;
+            --blue: #62a8ff;
+            --radius: 20px;
+        }
+
+        body {
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(50,150,90,0.14), transparent 30%),
+                radial-gradient(circle at bottom right, rgba(50,120,255,0.08), transparent 30%),
+                var(--bg);
+            color: var(--text);
+            font-family: Inter, Arial, Helvetica, sans-serif;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .app-shell {
+            width: min(1500px, 96vw);
+            margin: 24px auto;
+            min-height: calc(100vh - 48px);
+            background: rgba(8, 18, 13, 0.88);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 30px 100px rgba(0,0,0,0.45);
+        }
+
+        /* HEADER */
+
+        .topbar {
+            height: 76px;
+            padding: 0 28px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(8,18,13,0.95);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 13px;
+        }
+
+        .brand-mark {
+            width: 42px;
+            height: 42px;
+            border-radius: 13px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, #2fbb68, #155c37);
+            color: white;
+            box-shadow: 0 8px 25px rgba(47,187,104,0.2);
+        }
+
+        .brand-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .brand-text span {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 13px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: #b8c9bf;
+            font-size: 12px;
+            background: rgba(255,255,255,0.025);
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(74,222,128,0.7);
+        }
+
+        .view-toggle {
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--text);
+            padding: 9px 13px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        /* LAYOUT */
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            min-height: calc(100vh - 124px);
+        }
+
+        .sidebar {
+            border-right: 1px solid var(--border);
+            padding: 22px 14px;
+            background: rgba(6,15,11,0.65);
+        }
+
+        .nav-label {
+            color: #62766c;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 8px 12px 12px;
+        }
+
+        .nav-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 0;
+            color: #9aada3;
+            background: transparent;
+            padding: 12px 13px;
+            border-radius: 12px;
+            margin-bottom: 5px;
+            text-align: left;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.045);
+            color: white;
+        }
+
+        .nav-item.active {
+            color: white;
+            background: rgba(74,222,128,0.11);
+            border: 1px solid rgba(74,222,128,0.15);
+        }
+
+        .nav-item.active svg {
+            color: var(--primary);
+        }
+
+        .content {
+            padding: 28px;
+            overflow-y: auto;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* PAGE HEADER */
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+
+        .page-header h2 {
+            font-size: 27px;
+            margin-bottom: 6px;
+        }
+
+        .page-header p {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .date-label {
+            color: #7f9589;
+            font-size: 12px;
+        }
+
+        /* CARDS */
+
+        .card {
+            background: linear-gradient(
+                145deg,
+                rgba(20,39,29,0.92),
+                rgba(10,24,17,0.92)
+            );
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.12);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .card-title svg {
+            color: var(--primary);
+        }
+
+        /* DASHBOARD */
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.35fr 0.65fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .farm-health {
+            min-height: 225px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .farm-health::after {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            right: -100px;
+            top: -100px;
+            border: 1px solid rgba(74,222,128,0.08);
+            box-shadow:
+                0 0 0 25px rgba(74,222,128,0.025),
+                0 0 0 50px rgba(74,222,128,0.02);
+        }
+
+        .health-label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .health-value {
+            font-size: 52px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .health-value span {
+            font-size: 20px;
+            color: var(--primary);
+        }
+
+        .health-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #aee9c1;
+            font-size: 12px;
+        }
+
+        .crop-mini {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .crop-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(74,222,128,0.1);
+            color: var(--primary);
+            display: grid;
+            place-items: center;
+        }
+
+        .crop-mini strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .crop-mini span {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .action-card {
+            min-height: 225px;
+            border-color: rgba(245,185,66,0.17);
+        }
+
+        .action-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .attention {
+            color: var(--warning);
+            background: rgba(245,185,66,0.1);
+            border: 1px solid rgba(245,185,66,0.16);
+            padding: 5px 8px;
+            border-radius: 7px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .action-card h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .action-card p {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .primary-btn {
+            margin-top: 18px;
+            background: var(--primary);
+            color: #07110d;
+            border: none;
+            border-radius: 10px;
+            padding: 11px 15px;
+            font-weight: 700;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .primary-btn:hover {
+            filter: brightness(1.08);
+        }
+
+        /* TELEMETRY */
+
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 13px;
+            margin-bottom: 18px;
+        }
+
+        .metric {
+            padding: 17px;
+        }
+
+        .metric-top {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 13px;
+        }
+
+        .metric-icon {
+            width: 34px;
+            height: 34px;
+            display: grid;
+            place-items: center;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.045);
+            color: var(--blue);
+        }
+
+        .metric small {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .metric strong {
+            font-size: 21px;
+        }
+
+        .metric .unit {
+            color: var(--muted);
+            font-size: 11px;
+            margin-left: 3px;
+        }
+
+        /* LOWER GRID */
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .recommendation {
+            display: flex;
+            gap: 14px;
+        }
+
+        .recommendation-icon {
+            min-width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: rgba(98,168,255,0.1);
+            color: var(--blue);
+        }
+
+        .recommendation h4 {
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .recommendation p {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .pump-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .pump-info {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .pump-icon {
+            width: 45px;
+            height: 45px;
+            display: grid;
+            place-items: center;
+            border-radius: 13px;
+            background: rgba(255,255,255,0.045);
+            color: var(--blue);
+        }
+
+        .pump-info strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .pump-info span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .pump-btn {
+            border: 1px solid rgba(74,222,128,0.25);
+            background: rgba(74,222,128,0.08);
+            color: var(--primary);
+            padding: 10px 14px;
+            border-radius: 9px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* TASKS */
+
+        .task-list {
+            display: grid;
+            gap: 9px;
+        }
+
+        .task {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.025);
+        }
+
+        .task-check {
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+
+        .task div:nth-child(2) {
+            flex: 1;
+        }
+
+        .task strong {
+            display: block;
+            font-size: 12px;
+        }
+
+        .task span {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .task-time {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        /* SCANNER */
+
+        .scanner-layout {
+            display: grid;
+            grid-template-columns: 0.85fr 1.15fr;
+            gap: 18px;
+        }
+
+        .upload-area {
+            min-height: 260px;
+            border: 1px dashed rgba(74,222,128,0.3);
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            background: rgba(74,222,128,0.025);
+            padding: 25px;
+        }
+
+        .upload-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 16px;
+            display: grid;
+            place-items: center;
+            background: rgba(74,222,128,0.09);
+            color: var(--primary);
+            margin: 0 auto 13px;
+        }
+
+        .upload-area h3 {
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .upload-area p {
+            color: var(--muted);
+            font-size: 11px;
+            margin-bottom: 15px;
+        }
+
+        .file-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 9px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        #leafInput {
+            display: none;
+        }
+
+        .select-control {
+            width: 100%;
+            margin-bottom: 15px;
+            background: #0a1710;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 11px;
+            border-radius: 9px;
+            outline: none;
+        }
+
+        .scan-result {
+            margin-top: 15px;
+            padding: 17px;
+            border-radius: 14px;
+            background: rgba(74,222,128,0.055);
+            border: 1px solid rgba(74,222,128,0.12);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 13px;
+        }
+
+        .confidence {
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .result-disease {
+            font-size: 19px;
+            margin-bottom: 8px;
+        }
+
+        .result-text {
+            color: var(--muted);
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        /* ASSISTANT */
+
+        .assistant-layout {
+            max-width: 950px;
+        }
+
+        .assistant-card {
+            min-height: 580px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .assistant-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+        }
+
+        .assistant-brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .assistant-brand-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            background: rgba(98,168,255,0.1);
+            color: var(--blue);
+        }
+
+        .assistant-brand strong {
+            display: block;
+            font-size: 14px;
+        }
+
+        .assistant-brand span {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .language-select {
+            background: #0a1710;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin: 16px 0;
+        }
+
+        .quick-question {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            color: #c5d0ca;
+            padding: 8px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            min-height: 350px;
+            padding: 10px 0;
+            overflow-y: auto;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 11px 13px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .message.bot {
+            background: rgba(255,255,255,0.045);
+            color: #d7e0db;
+        }
+
+        .message.user {
+            margin-left: auto;
+            background: rgba(74,222,128,0.13);
+            color: #dff9e7;
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #08130d;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 11px 13px;
+            border-radius: 9px;
+            outline: none;
+            font-size: 12px;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: white;
+            display: grid;
+            place-items: center;
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: #06100a;
+            border: none;
+        }
+
+        /* CROPS */
+
+        .crop-profile {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .crop-banner {
+            padding: 25px;
+            min-height: 210px;
+            background:
+                linear-gradient(120deg, rgba(40,125,74,0.2), rgba(15,40,27,0.8));
+        }
+
+        .crop-banner h3 {
+            font-size: 30px;
+            margin-bottom: 5px;
+        }
+
+        .crop-banner p {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .crop-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            margin-top: 25px;
+        }
+
+        .crop-stat {
+            background: rgba(0,0,0,0.14);
+            padding: 12px;
+            border-radius: 9px;
+        }
+
+        .crop-stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 9px;
+            margin-bottom: 4px;
+        }
+
+        .crop-stat strong {
+            font-size: 12px;
+        }
+
+        .progress {
+            height: 7px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 14px;
+        }
+
+        .progress span {
+            display: block;
+            width: 68%;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        /* WEATHER */
+
+        .weather-main {
+            display: grid;
+            grid-template-columns: 0.8fr 1.2fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .temperature {
+            font-size: 50px;
+            font-weight: 700;
+            margin: 15px 0 4px;
+        }
+
+        .weather-location {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .forecast {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .forecast-day {
+            padding: 13px 8px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.035);
+            text-align: center;
+        }
+
+        .forecast-day strong {
+            display: block;
+            font-size: 10px;
+            margin-bottom: 12px;
+        }
+
+        .forecast-day svg {
+            color: var(--blue);
+            margin-bottom: 10px;
+        }
+
+        .forecast-day span {
+            display: block;
+            color: var(--muted);
+            font-size: 9px;
+        }
+
+        /* HARDWARE */
+
+        .hardware {
+            margin-top: 18px;
+        }
+
+        .hardware-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .slider-wrap label {
+            display: flex;
+            justify-content: space-between;
+            color: var(--muted);
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+        }
+
+        .hardware-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 16px;
+        }
+
+        /* MOBILE NAV */
+
+        .mobile-nav {
+            display: none;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1050px) {
+            .hero-grid,
+            .scanner-layout,
+            .weather-main {
+                grid-template-columns: 1fr;
+            }
+
+            .telemetry-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .dashboard-grid,
+            .crop-profile {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 760px) {
+            .app-shell {
+                width: 100%;
+                min-height: 100vh;
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .topbar {
+                padding: 0 16px;
+                height: 68px;
+            }
+
+            .status-pill {
+                display: none;
+            }
+
+            .main-layout {
+                display: block;
+            }
+
+            .sidebar {
+                display: none;
+            }
+
+            .content {
+                padding: 18px 15px 90px;
+            }
+
+            .page-header h2 {
+                font-size: 22px;
+            }
+
+            .telemetry-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hardware-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-nav {
+                position: fixed;
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 67px;
+                background: rgba(7,17,13,0.97);
+                border-top: 1px solid var(--border);
+                z-index: 100;
+            }
+
+            .mobile-nav button {
+                background: transparent;
+                border: none;
+                color: #708178;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 4px;
+                font-size: 8px;
+            }
+
+            .mobile-nav button.active {
+                color: var(--primary);
+            }
+
+            .mobile-nav button svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .forecast {
+                grid-template-columns: repeat(5, minmax(50px, 1fr));
+                overflow-x: auto;
+            }
+        }
+
+        /* SCROLLBAR */
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.12);
+            border-radius: 20px;
+        }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-emerald-500 selection:text-white">
 
-  <!-- Header Navigation -->
-  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 text-xl font-bold">
-          <i class="fa-solid fa-seedling"></i>
-        </div>
-        <div>
-          <h1 class="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Smart Krishi AI</h1>
-          <p class="text-xs text-slate-400">Intelligent Farmer Mobile & IoT Agriculture Platform</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-3">
-        <button id="viewToggleBtn" onclick="toggleViewMode()" class="px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-xs font-semibold flex items-center gap-2 text-emerald-400">
-          <i class="fa-solid fa-mobile-screen"></i> Mobile Simulator View
-        </button>
-        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> IoT Online
-        </span>
-      </div>
-    </div>
-  </header>
+<body>
 
-  <!-- Main Content Layout -->
-  <main class="max-w-7xl mx-auto px-4 py-6">
+<div class="app-shell">
 
-    <!-- View Mode 1: Mobile Phone Simulator Container -->
-    <div id="mobileContainer" class="flex justify-center items-center py-4">
-      <div class="w-[390px] h-[800px] bg-slate-900 rounded-[45px] p-4 shadow-2xl border-[8px] border-slate-800 relative flex flex-col overflow-hidden">
-        <!-- Phone Speaker & Camera Notch -->
-        <div class="w-32 h-5 bg-slate-800 rounded-b-2xl mx-auto absolute top-0 left-1/2 -translate-x-1/2 z-40 flex items-center justify-center">
-          <div class="w-10 h-1 bg-slate-700 rounded-full"></div>
+    <!-- HEADER -->
+    <header class="topbar">
+
+        <div class="brand">
+            <div class="brand-mark">
+                <i data-lucide="leaf"></i>
+            </div>
+
+            <div class="brand-text">
+                <h1>Smart Krishi AI</h1>
+                <span>Intelligent Farming Platform</span>
+            </div>
         </div>
 
-        <!-- App Screen Display Frame -->
-        <div id="appFrame" class="w-full h-full bg-slate-950 rounded-[30px] pt-7 pb-16 px-3.5 overflow-y-auto flex flex-col text-sm relative">
+        <div class="top-actions">
 
-          <!-- Screen 1: Dashboard -->
-          <div id="screen-dashboard" class="screen-view space-y-4">
-            <!-- Active Crop Header -->
-            <div class="bg-gradient-to-r from-emerald-900/60 to-teal-900/60 p-3.5 rounded-2xl border border-emerald-500/30 flex items-center justify-between">
-              <div>
-                <span class="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider">Active Crop</span>
-                <h3 class="font-bold text-base text-white">Tomato (Hybrid Super)</h3>
-                <p class="text-xs text-slate-300">Stage: Flowering • Day 42</p>
-              </div>
-              <i class="fa-solid fa-wheat-awn text-emerald-400 text-2xl"></i>
+            <div class="status-pill">
+                <span class="status-dot"></span>
+                IoT System Online
             </div>
 
-            <!-- Telemetry Metrics Grid -->
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-bold text-slate-400 uppercase">Live IoT Telemetry</span>
-                <span id="lastUpdatedTime" class="text-[10px] text-slate-500">Updated just now</span>
-              </div>
-              <div class="grid grid-cols-2 gap-2.5">
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                  <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-                    <span>Moisture</span>
-                    <i class="fa-solid fa-droplet text-cyan-400"></i>
-                  </div>
-                  <span id="val-moisture" class="text-xl font-bold text-cyan-400">38.5%</span>
-                  <p class="text-[10px] text-amber-400 mt-1">Below Target (40%)</p>
-                </div>
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                  <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-                    <span>Temperature</span>
-                    <i class="fa-solid fa-temperature-high text-amber-400"></i>
-                  </div>
-                  <span id="val-temp" class="text-xl font-bold text-amber-400">28.4°C</span>
-                  <p class="text-[10px] text-emerald-400 mt-1">Optimal Range</p>
-                </div>
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                  <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-                    <span>Humidity</span>
-                    <i class="fa-solid fa-wind text-teal-400"></i>
-                  </div>
-                  <span id="val-humidity" class="text-xl font-bold text-teal-400">65%</span>
-                  <p class="text-[10px] text-slate-400 mt-1">Normal</p>
-                </div>
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                  <div class="flex items-center justify-between text-slate-400 text-xs mb-1">
-                    <span>Battery</span>
-                    <i class="fa-solid fa-battery-three-quarters text-emerald-400"></i>
-                  </div>
-                  <span id="val-battery" class="text-xl font-bold text-emerald-400">94%</span>
-                  <p class="text-[10px] text-emerald-400 mt-1">Solar Charging</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Automatic Pump Controller Box -->
-            <div class="bg-slate-900 p-3.5 rounded-2xl border border-slate-800 flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                <div id="pumpIconBg" class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-                  <i class="fa-solid fa-faucet-drip text-lg"></i>
-                </div>
-                <div>
-                  <h4 class="font-bold text-white text-xs">Automatic Water Pump</h4>
-                  <p id="pumpStatusText" class="text-[11px] text-slate-400">Status: OFF (Standby)</p>
-                </div>
-              </div>
-              <button id="pumpToggleBtn" onclick="togglePumpWeb()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition">
-                START
-              </button>
-            </div>
-
-            <!-- Alerts & Recommendations -->
-            <div id="alertsContainer" class="space-y-2">
-              <div class="bg-amber-950/40 border border-amber-600/40 p-3 rounded-xl text-xs text-amber-200 flex gap-2">
-                <i class="fa-solid fa-triangle-exclamation text-amber-400 mt-0.5"></i>
-                <div>
-                  <strong class="font-bold block text-amber-300">Soil Moisture Low (38.5%)</strong>
-                  Automatic irrigation pump standby mode.
-                </div>
-              </div>
-              <div class="bg-indigo-950/40 border border-indigo-500/40 p-3 rounded-xl text-xs text-indigo-200 flex gap-2">
-                <i class="fa-solid fa-brain text-cyan-400 mt-0.5"></i>
-                <div>
-                  <strong class="font-bold block text-cyan-300">AI Advice</strong>
-                  Rain probability 80% tomorrow. Postpone manual watering.
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Screen 2: Plant Scanner -->
-          <div id="screen-scanner" class="screen-view hidden space-y-4">
-            <h3 class="font-bold text-base text-white">AI Plant Disease Scanner</h3>
-            <div class="space-y-2">
-              <label class="text-xs text-slate-400 font-medium">Target Crop</label>
-              <select id="cropSelect" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
-                <option value="Tomato">Tomato (टमाटर / टोमॅटो)</option>
-                <option value="Potato">Potato (आलू / बटाटा)</option>
-                <option value="Rice">Rice (धान / भात)</option>
-                <option value="Wheat">Wheat (गेहूं / गव्हाचे)</option>
-                <option value="Cotton">Cotton (कपास / कपाशी)</option>
-                <option value="Corn">Corn (मक्का / मका)</option>
-              </select>
-            </div>
-
-            <div class="w-full h-44 bg-slate-900 border-2 border-dashed border-emerald-500/40 rounded-2xl flex flex-col items-center justify-center text-center p-4 relative overflow-hidden">
-              <i class="fa-solid fa-camera text-3xl text-emerald-400 mb-2"></i>
-              <p class="text-xs font-semibold text-white">Capture or Upload Leaf Photo</p>
-              <p class="text-[10px] text-slate-400">Analyzed using PyTorch CV Model</p>
-              <input type="file" id="leafInput" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewAndScanLeaf(event)">
-            </div>
-
-            <button onclick="simulateLeafScan()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold">
-              Run AI Diagnostic Scan
+            <button class="view-toggle" onclick="toggleViewMode()">
+                <i data-lucide="monitor"></i>
+                <span>Dashboard View</span>
             </button>
 
-            <!-- Scan Output Box -->
-            <div id="scanResultCard" class="hidden bg-slate-900 border border-amber-500/40 p-3.5 rounded-2xl space-y-2 text-xs">
-              <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span id="resCrop" class="font-bold text-white">Tomato Diagnosis</span>
-                <span id="resConf" class="bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-bold">Confidence: 92%</span>
-              </div>
-              <div>
-                <span class="text-slate-400 font-semibold">Detected Condition:</span>
-                <p id="resDisease" class="font-bold text-amber-400 text-sm">Early Blight (Fungal)</p>
-              </div>
-              <div>
-                <span class="text-slate-400 font-semibold">Symptoms:</span>
-                <p id="resSymptoms" class="text-slate-300">Concentric target spots on lower foliage with yellow halo margins.</p>
-              </div>
-              <div>
-                <span class="text-slate-400 font-semibold">Action Steps:</span>
-                <ul id="resActions" class="list-disc list-inside text-emerald-300 space-y-1 mt-1">
-                  <li>Remove infected lower leaves.</li>
-                  <li>Spray Mancozeb (2g/liter of water).</li>
-                </ul>
-              </div>
-            </div>
-          </div>
+        </div>
 
-          <!-- Screen 3: AI Assistant (Multilingual) -->
-          <div id="screen-assistant" class="screen-view hidden flex flex-col h-full">
-            <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-2">
-              <div class="flex items-center gap-2">
-                <i class="fa-solid fa-robot text-cyan-400"></i>
-                <h3 class="font-bold text-xs text-white">AI Farming Assistant</h3>
-              </div>
-              <select id="assistantLang" class="bg-slate-900 border border-slate-800 text-[10px] text-emerald-400 rounded-lg px-2 py-1">
-                <option value="en">English</option>
-                <option value="hi">हिंदी (Hindi)</option>
-                <option value="mr">मराठी (Marathi)</option>
-              </select>
-            </div>
+    </header>
 
-            <!-- Chat History -->
-            <div id="chatMessages" class="flex-1 overflow-y-auto space-y-2 pr-1 text-xs mb-2">
-              <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-slate-200 max-w-[85%]">
-                Namaste! I am Smart Krishi AI Assistant. Ask me about leaf yellowing, fertilizers, weather, or pump control.
-              </div>
-            </div>
 
-            <!-- Input Controls -->
-            <div class="flex items-center gap-1.5">
-              <button onclick="startVoiceInput()" class="p-2.5 rounded-xl bg-slate-900 text-emerald-400 border border-slate-800 hover:bg-slate-800">
-                <i class="fa-solid fa-microphone"></i>
-              </button>
-              <input type="text" id="chatInput" placeholder="Type message..." class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500" onkeypress="if(event.key==='Enter') sendChatMessage()">
-              <button onclick="sendChatMessage()" class="p-2.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-500">
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
-            </div>
-          </div>
+    <div class="main-layout">
 
-          <!-- Screen 4: Crops -->
-          <div id="screen-crops" class="screen-view hidden space-y-3">
-            <h3 class="font-bold text-base text-white">My Crop Profiles</h3>
-            <div class="bg-slate-900 border border-slate-800 p-3.5 rounded-2xl space-y-2 text-xs">
-              <div class="flex justify-between items-center">
-                <span class="font-bold text-emerald-400">Tomato (Hybrid Abhinav)</span>
-                <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full text-[10px]">Flowering</span>
-              </div>
-              <p class="text-slate-400">Sowing Date: 2026-06-15 • Size: 2.5 Acres</p>
-              <p class="text-slate-400">Location: North Field Sector A</p>
-              <div class="border-t border-slate-800 pt-2 text-[11px] text-slate-300">
-                <strong>Schedule:</strong> Top-dress 25kg Urea per acre on Day 45.
-              </div>
-            </div>
-          </div>
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
 
-          <!-- Screen 5: Weather -->
-          <div id="screen-weather" class="screen-view hidden space-y-3">
-            <h3 class="font-bold text-base text-white">Farm Weather & Rain Forecast</h3>
-            <div class="bg-gradient-to-r from-blue-900/60 to-teal-900/60 p-4 rounded-2xl border border-blue-500/30 text-xs space-y-2">
-              <div class="flex justify-between items-center">
-                <div>
-                  <h4 class="font-bold text-white text-sm">Maharashtra, India</h4>
-                  <p class="text-slate-300">Partly Cloudy</p>
+            <div class="nav-label">Workspace</div>
+
+            <button class="nav-item active"
+                    id="nav-dashboard"
+                    onclick="switchScreen('dashboard')">
+                <i data-lucide="layout-dashboard"></i>
+                Dashboard
+            </button>
+
+            <button class="nav-item"
+                    id="nav-scanner"
+                    onclick="switchScreen('scanner')">
+                <i data-lucide="scan-line"></i>
+                AI Crop Scanner
+            </button>
+
+            <button class="nav-item"
+                    id="nav-assistant"
+                    onclick="switchScreen('assistant')">
+                <i data-lucide="message-circle"></i>
+                AI Assistant
+            </button>
+
+            <button class="nav-item"
+                    id="nav-crops"
+                    onclick="switchScreen('crops')">
+                <i data-lucide="sprout"></i>
+                My Crops
+            </button>
+
+            <button class="nav-item"
+                    id="nav-weather"
+                    onclick="switchScreen('weather')">
+                <i data-lucide="cloud-sun"></i>
+                Weather
+            </button>
+
+            <div class="nav-label" style="margin-top:28px;">System</div>
+
+            <button class="nav-item">
+                <i data-lucide="cpu"></i>
+                IoT Devices
+            </button>
+
+            <button class="nav-item">
+                <i data-lucide="settings"></i>
+                Settings
+            </button>
+
+        </aside>
+
+
+        <!-- CONTENT -->
+        <main class="content">
+
+
+            <!-- ================= DASHBOARD ================= -->
+
+            <section id="screen-dashboard" class="screen active">
+
+                <div class="page-header">
+
+                    <div>
+                        <h2>Farm Overview</h2>
+                        <p>Your farm status and recommended actions</p>
+                    </div>
+
+                    <div class="date-label">
+                        Last updated:
+                        <span id="lastUpdatedTime">Just now</span>
+                    </div>
+
                 </div>
-                <span class="text-2xl font-bold text-white">28.5°C</span>
-              </div>
-              <div class="flex justify-around border-t border-white/10 pt-2">
-                <span>Humidity: 68%</span>
-                <span>Rain Chance: 35%</span>
-              </div>
-            </div>
-          </div>
 
-        </div>
 
-        <!-- App Bottom Navigation Bar -->
-        <nav class="absolute bottom-0 left-0 right-0 h-16 bg-slate-900/95 backdrop-blur border-t border-slate-800 flex justify-around items-center text-[10px] font-semibold text-slate-400 z-30 px-2">
-          <button onclick="switchScreen('dashboard')" id="nav-dashboard" class="flex flex-col items-center gap-1 text-emerald-400">
-            <i class="fa-solid fa-house text-base"></i> Home
-          </button>
-          <button onclick="switchScreen('scanner')" id="nav-scanner" class="flex flex-col items-center gap-1 hover:text-white">
-            <i class="fa-solid fa-camera text-base"></i> Scan AI
-          </button>
-          <button onclick="switchScreen('assistant')" id="nav-assistant" class="flex flex-col items-center gap-1 hover:text-white">
-            <i class="fa-solid fa-robot text-base"></i> Assistant
-          </button>
-          <button onclick="switchScreen('crops')" id="nav-crops" class="flex flex-col items-center gap-1 hover:text-white">
-            <i class="fa-solid fa-wheat-awn text-base"></i> Crops
-          </button>
-          <button onclick="switchScreen('weather')" id="nav-weather" class="flex flex-col items-center gap-1 hover:text-white">
-            <i class="fa-solid fa-cloud-sun text-base"></i> Weather
-          </button>
-        </nav>
+                <div class="hero-grid">
 
-      </div>
+                    <!-- FARM HEALTH -->
+
+                    <div class="card farm-health">
+
+                        <div class="health-label">
+                            Overall Farm Health
+                        </div>
+
+                        <div class="health-value">
+                            82<span>%</span>
+                        </div>
+
+                        <div class="health-status">
+                            <i data-lucide="check-circle" width="15"></i>
+                            Farm conditions are stable
+                        </div>
+
+                        <div class="crop-mini">
+
+                            <div class="crop-icon">
+                                <i data-lucide="sprout"></i>
+                            </div>
+
+                            <div>
+                                <strong>Tomato — Hybrid Super</strong>
+                                <span>Flowering stage · Day 42</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ACTION NEEDED -->
+
+                    <div class="card action-card">
+
+                        <div class="action-header">
+                            <div class="card-title" style="margin:0;">
+                                <i data-lucide="triangle-alert"></i>
+                                Action Needed
+                            </div>
+
+                            <span class="attention">Attention</span>
+                        </div>
+
+                        <h3>Check soil moisture</h3>
+
+                        <p>
+                            Soil moisture is currently below the preferred
+                            level. Rain is expected tomorrow, so automatic
+                            irrigation should be reviewed before watering.
+                        </p>
+
+                        <button class="primary-btn"
+                                onclick="switchScreen('assistant')">
+                            <i data-lucide="message-circle"></i>
+                            Ask AI
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- TELEMETRY -->
+
+                <div class="telemetry-grid">
+
+                    <div class="card metric">
+
+                        <div class="metric-top">
+                            <small>Soil Moisture</small>
+                            <div class="metric-icon">
+                                <i data-lucide="droplets"></i>
+                            </div>
+                        </div>
+
+                        <strong id="val-moisture">38.5</strong>
+                        <span class="unit">%</span>
+
+                    </div>
+
+
+                    <div class="card metric">
+
+                        <div class="metric-top">
+                            <small>Temperature</small>
+                            <div class="metric-icon">
+                                <i data-lucide="thermometer"></i>
+                            </div>
+                        </div>
+
+                        <strong id="val-temp">28.4</strong>
+                        <span class="unit">°C</span>
+
+                    </div>
+
+
+                    <div class="card metric">
+
+                        <div class="metric-top">
+                            <small>Humidity</small>
+                            <div class="metric-icon">
+                                <i data-lucide="cloud"></i>
+                            </div>
+                        </div>
+
+                        <strong id="val-humidity">65</strong>
+                        <span class="unit">%</span>
+
+                    </div>
+
+
+                    <div class="card metric">
+
+                        <div class="metric-top">
+                            <small>Device Battery</small>
+                            <div class="metric-icon">
+                                <i data-lucide="battery-medium"></i>
+                            </div>
+                        </div>
+
+                        <strong id="val-battery">94</strong>
+                        <span class="unit">%</span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- LOWER DASHBOARD -->
+
+                <div class="dashboard-grid">
+
+                    <!-- AI RECOMMENDATION -->
+
+                    <div class="card">
+
+                        <div class="card-title">
+                            <i data-lucide="brain"></i>
+                            AI Recommendation
+                        </div>
+
+                        <div class="recommendation">
+
+                            <div class="recommendation-icon">
+                                <i data-lucide="cloud-rain"></i>
+                            </div>
+
+                            <div>
+
+                                <h4>Postpone manual irrigation</h4>
+
+                                <p>
+                                    Weather data indicates an approximately
+                                    80% chance of rain tomorrow. Keep the pump
+                                    off unless soil moisture falls further.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- IRRIGATION -->
+
+                    <div class="card">
+
+                        <div class="card-title">
+                            <i data-lucide="waves"></i>
+                            Smart Irrigation
+                        </div>
+
+                        <div class="pump-control">
+
+                            <div class="pump-info">
+
+                                <div class="pump-icon" id="pumpIconBg">
+                                    <i data-lucide="power"></i>
+                                </div>
+
+                                <div>
+                                    <strong>Water Pump</strong>
+                                    <span id="pumpStatusText">Automatic control OFF</span>
+                                </div>
+
+                            </div>
+
+                            <button
+                                id="pumpToggleBtn"
+                                class="pump-btn"
+                                onclick="togglePumpWeb()">
+                                START
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- TASKS -->
+
+                    <div class="card" style="grid-column:1/-1;">
+
+                        <div class="card-title">
+                            <i data-lucide="list-checks"></i>
+                            Today's Farm Tasks
+                        </div>
+
+                        <div class="task-list">
+
+                            <div class="task">
+
+                                <div class="task-check"></div>
+
+                                <div>
+                                    <strong>Inspect tomato leaves</strong>
+                                    <span>Check for disease or pest symptoms</span>
+                                </div>
+
+                                <div class="task-time">
+                                    Morning
+                                </div>
+
+                            </div>
+
+
+                            <div class="task">
+
+                                <div class="task-check"></div>
+
+                                <div>
+                                    <strong>Review soil moisture</strong>
+                                    <span>Confirm irrigation requirement</span>
+                                </div>
+
+                                <div class="task-time">
+                                    11:00 AM
+                                </div>
+
+                            </div>
+
+
+                            <div class="task">
+
+                                <div class="task-check"></div>
+
+                                <div>
+                                    <strong>Check weather recommendation</strong>
+                                    <span>Prepare for possible rainfall</span>
+                                </div>
+
+                                <div class="task-time">
+                                    Evening
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- HARDWARE SIMULATOR -->
+
+                <div class="card hardware">
+
+                    <div class="card-title">
+                        <i data-lucide="cpu"></i>
+                        IoT Hardware Simulator
+                    </div>
+
+                    <div class="hardware-badge">
+                        <span class="status-dot"></span>
+                        ESP32 Demo Sensor Environment
+                    </div>
+
+                    <div class="hardware-grid">
+
+                        <div class="slider-wrap">
+
+                            <label>
+                                <span>Soil Moisture</span>
+                                <span id="lblMoisture">38.5%</span>
+                            </label>
+
+                            <input
+                                id="sliderMoisture"
+                                type="range"
+                                min="0"
+                                max="100"
+                                value="38.5"
+                                step="0.5"
+                                oninput="updateSimulatedTelemetry()">
+
+                        </div>
+
+
+                        <div class="slider-wrap">
+
+                            <label>
+                                <span>Temperature</span>
+                                <span id="lblTemp">28.4°C</span>
+                            </label>
+
+                            <input
+                                id="sliderTemp"
+                                type="range"
+                                min="10"
+                                max="50"
+                                value="28.4"
+                                step="0.1"
+                                oninput="updateSimulatedTelemetry()">
+
+                        </div>
+
+
+                        <div class="slider-wrap">
+
+                            <label>
+                                <span>Humidity</span>
+                                <span id="lblHumidity">65%</span>
+                            </label>
+
+                            <input
+                                id="sliderHumidity"
+                                type="range"
+                                min="0"
+                                max="100"
+                                value="65"
+                                step="1"
+                                oninput="updateSimulatedTelemetry()">
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= SCANNER ================= -->
+
+            <section id="screen-scanner" class="screen">
+
+                <div class="page-header">
+
+                    <div>
+                        <h2>AI Crop Scanner</h2>
+                        <p>Use computer vision to analyze crop health</p>
+                    </div>
+
+                </div>
+
+
+                <div class="scanner-layout">
+
+                    <div class="card">
+
+                        <div class="card-title">
+                            <i data-lucide="scan-line"></i>
+                            Plant Image
+                        </div>
+
+                        <select id="cropSelect" class="select-control">
+                            <option>Tomato</option>
+                            <option>Potato</option>
+                            <option>Rice</option>
+                            <option>Wheat</option>
+                            <option>Cotton</option>
+                            <option>Corn</option>
+                        </select>
+
+
+                        <div class="upload-area">
+
+                            <div>
+
+                                <div class="upload-icon">
+                                    <i data-lucide="image-plus"></i>
+                                </div>
+
+                                <h3>Upload crop image</h3>
+
+                                <p>
+                                    Use a clear image of the affected
+                                    leaf for better analysis.
+                                </p>
+
+                                <label class="file-label">
+
+                                    <i data-lucide="upload"></i>
+
+                                    Choose Image
+
+                                    <input
+                                        id="leafInput"
+                                        type="file"
+                                        accept="image/*"
+                                        onchange="previewAndScanLeaf(event)">
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            class="primary-btn"
+                            style="width:100%;justify-content:center;"
+                            onclick="simulateLeafScan()">
+
+                            <i data-lucide="scan"></i>
+                            Analyze Crop
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="card">
+
+                        <div class="card-title">
+                            <i data-lucide="activity"></i>
+                            AI Diagnosis
+                        </div>
+
+                        <div
+                            id="scanResultCard"
+                            class="scan-result"
+                            style="display:none;">
+
+                            <div class="result-header">
+
+                                <strong>Analysis Complete</strong>
+
+                                <span class="confidence">
+                                    Confidence:
+                                    <span id="resConf">92%</span>
+                                </span>
+
+                            </div>
+
+                            <div
+                                class="result-disease"
+                                id="resDisease">
+                                Early Blight
+                            </div>
+
+                            <p
+                                class="result-text"
+                                id="resSymptoms">
+                                Dark circular lesions and yellowing
+                                around affected leaf areas.
+                            </p>
+
+                            <br>
+
+                            <p
+                                class="result-text"
+                                id="resActions">
+                                Remove severely affected leaves and
+                                avoid overhead watering.
+                            </p>
+
+                        </div>
+
+                        <div
+                            id="scannerEmpty"
+                            style="color:var(--muted);
+                                   font-size:12px;
+                                   line-height:1.6;">
+                            Upload a crop image to receive an AI-based
+                            plant health diagnosis.
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= ASSISTANT ================= -->
+
+            <section id="screen-assistant" class="screen">
+
+                <div class="page-header">
+
+                    <div>
+                        <h2>Smart Krishi Assistant</h2>
+                        <p>Ask farming questions in your preferred language</p>
+                    </div>
+
+                </div>
+
+
+                <div class="assistant-layout">
+
+                    <div class="card assistant-card">
+
+                        <div class="assistant-top">
+
+                            <div class="assistant-brand">
+
+                                <div class="assistant-brand-icon">
+                                    <i data-lucide="bot"></i>
+                                </div>
+
+                                <div>
+                                    <strong>Krishi AI</strong>
+                                    <span>Farming decision support</span>
+                                </div>
+
+                            </div>
+
+
+                            <select
+                                id="assistantLang"
+                                class="language-select">
+
+                                <option value="en">English</option>
+                                <option value="hi">Hindi</option>
+                                <option value="mr">Marathi</option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="quick-questions">
+
+                            <button
+                                class="quick-question"
+                                onclick="sendQuickQuestion('When should I water my crop?')">
+                                When should I water?
+                            </button>
+
+                            <button
+                                class="quick-question"
+                                onclick="sendQuickQuestion('My crop is unhealthy')">
+                                My crop is unhealthy
+                            </button>
+
+                            <button
+                                class="quick-question"
+                                onclick="sendQuickQuestion('Should I irrigate today?')">
+                                Should I irrigate?
+                            </button>
+
+                            <button
+                                class="quick-question"
+                                onclick="sendQuickQuestion('How can I identify a pest?')">
+                                Identify a pest
+                            </button>
+
+                        </div>
+
+
+                        <div
+                            id="chatMessages"
+                            class="chat-messages">
+
+                            <div class="message bot">
+                                Hello. I am your Smart Krishi AI assistant.
+                                Ask me about irrigation, crop health,
+                                weather, pests, or farming tasks.
+                            </div>
+
+                        </div>
+
+
+                        <div class="chat-input-row">
+
+                            <button
+                                class="icon-btn"
+                                onclick="startVoiceInput()">
+
+                                <i data-lucide="mic"></i>
+
+                            </button>
+
+
+                            <input
+                                id="chatInput"
+                                class="chat-input"
+                                type="text"
+                                placeholder="Ask your farming question...">
+
+
+                            <button
+                                class="icon-btn send-btn"
+                                onclick="sendChatMessage()">
+
+                                <i data-lucide="send"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= CROPS ================= -->
+
+            <section id="screen-crops" class="screen">
+
+                <div class="page-header">
+
+                    <div>
+                        <h2>My Crops</h2>
+                        <p>Monitor crop growth, health and upcoming tasks</p>
+                    </div>
+
+                </div>
+
+
+                <div class="crop-profile">
+
+                    <div class="card crop-banner">
+
+                        <div class="crop-icon">
+                            <i data-lucide="sprout"></i>
+                        </div>
+
+                        <h3>Tomato</h3>
+
+                        <p>
+                            Hybrid Abhinav · North Field Sector A
+                        </p>
+
+                        <div class="crop-stats">
+
+                            <div class="crop-stat">
+                                <span>Area</span>
+                                <strong>2.5 Acres</strong>
+                            </div>
+
+                            <div class="crop-stat">
+                                <span>Stage</span>
+                                <strong>Flowering</strong>
+                            </div>
+
+                            <div class="crop-stat">
+                                <span>Sowing Date</span>
+                                <strong>15 Jun 2026</strong>
+                            </div>
+
+                            <div class="crop-stat">
+                                <span>Current Day</span>
+                                <strong>Day 42</strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card">
+
+                        <div class="card-title">
+                            <i data-lucide="heart-pulse"></i>
+                            Crop Health
+                        </div>
+
+                        <div class="health-value" style="font-size:40px;">
+                            82<span>%</span>
+                        </div>
+
+                        <div class="progress">
+                            <span></span>
+                        </div>
+
+                        <p
+                            style="color:var(--muted);
+                                   font-size:11px;
+                                   line-height:1.6;
+                                   margin-top:15px;">
+                            Crop conditions are currently stable.
+                            Continue monitoring moisture and leaf health.
+                        </p>
+
+                        <div class="card-title" style="margin-top:28px;">
+                            <i data-lucide="calendar-clock"></i>
+                            Next Farm Task
+                        </div>
+
+                        <p
+                            style="color:#dce6e0;
+                                   font-size:12px;">
+                            Top-dress approximately 25 kg Urea per acre
+                            around Day 45, based on crop condition.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================= WEATHER ================= -->
+
+            <section id="screen-weather" class="screen">
+
+                <div class="page-header">
+
+                    <div>
+                        <h2>Weather Intelligence</h2>
+                        <p>Weather insights for better farming decisions</p>
+                    </div>
+
+                </div>
+
+
+                <div class="weather-main">
+
+                    <div class="card">
+
+                        <div class="card-title">
+                            <i data-lucide="cloud-sun"></i>
+                            Current Conditions
+                        </div>
+
+                        <div class="temperature">
+                            28.5°C
+                        </div>
+
+                        <div class="weather-location">
+                            Maharashtra · Partly Cloudy
+                        </div>
+
+                        <div class="crop-stats">
+
+                            <div class="crop-stat">
+                                <span>Humidity</span>
+                                <strong>68%</strong>
+                            </div>
+
+                            <div class="crop-stat">
+                                <span>Rain Chance</span>
+                                <strong>35%</strong>
+                            </div>
+
+                            <div class="crop-stat">
+                                <span>Wind</span>
+                                <strong>12 km/h</strong>
+                            </div>
+
+                            <div class="crop-stat">
+                                <span>UV Index</span>
+                                <strong>Moderate</strong>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="card">
+
+                        <div class="card-title">
+                            <i data-lucide="calendar-days"></i>
+                            5-Day Forecast
+                        </div>
+
+                        <div class="forecast">
+
+                            <div class="forecast-day">
+                                <strong>Today</strong>
+                                <i data-lucide="cloud-sun"></i>
+                                <span>28° / 21°</span>
+                            </div>
+
+                            <div class="forecast-day">
+                                <strong>Tue</strong>
+                                <i data-lucide="cloud-rain"></i>
+                                <span>27° / 20°</span>
+                            </div>
+
+                            <div class="forecast-day">
+                                <strong>Wed</strong>
+                                <i data-lucide="cloud-rain"></i>
+                                <span>26° / 20°</span>
+                            </div>
+
+                            <div class="forecast-day">
+                                <strong>Thu</strong>
+                                <i data-lucide="cloud-sun"></i>
+                                <span>29° / 21°</span>
+                            </div>
+
+                            <div class="forecast-day">
+                                <strong>Fri</strong>
+                                <i data-lucide="sun"></i>
+                                <span>30° / 22°</span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="card">
+
+                    <div class="card-title">
+                        <i data-lucide="brain"></i>
+                        Farming Recommendation
+                    </div>
+
+                    <div class="recommendation">
+
+                        <div class="recommendation-icon">
+                            <i data-lucide="cloud-rain"></i>
+                        </div>
+
+                        <div>
+
+                            <h4>
+                                Monitor rainfall before irrigation
+                            </h4>
+
+                            <p>
+                                Rain probability is currently significant.
+                                Check soil moisture before starting the
+                                irrigation pump. Avoid unnecessary watering
+                                if rainfall is expected.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
     </div>
 
-    <!-- Live Telemetry Tester Controls Bar -->
-    <div class="mt-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 max-w-4xl mx-auto">
-      <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-        <i class="fa-solid fa-sliders"></i> Hardware Simulator Controls (Test Real-time Thresholds)
-      </h3>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-        <div>
-          <label class="block text-slate-400 mb-1">Simulate Soil Moisture (%): <span id="lblMoisture" class="font-bold text-white">38.5%</span></label>
-          <input type="range" id="sliderMoisture" min="10" max="90" value="38.5" step="0.5" class="w-full accent-emerald-500" oninput="updateSimulatedTelemetry()">
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">Simulate Temperature (°C): <span id="lblTemp" class="font-bold text-white">28.4°C</span></label>
-          <input type="range" id="sliderTemp" min="15" max="45" value="28.4" step="0.1" class="w-full accent-amber-500" oninput="updateSimulatedTelemetry()">
-        </div>
-        <div>
-          <label class="block text-slate-400 mb-1">Simulate Humidity (%): <span id="lblHumidity" class="font-bold text-white">65%</span></label>
-          <input type="range" id="sliderHumidity" min="20" max="95" value="65" step="1" class="w-full accent-teal-500" oninput="updateSimulatedTelemetry()">
-        </div>
-      </div>
-    </div>
 
-  </main>
+    <!-- MOBILE NAV -->
 
-  <script src="app.js"></script>
+    <nav class="mobile-nav">
+
+        <button
+            id="mobile-dashboard"
+            class="active"
+            onclick="switchScreen('dashboard')">
+
+            <i data-lucide="layout-dashboard"></i>
+            Dashboard
+
+        </button>
+
+
+        <button
+            id="mobile-scanner"
+            onclick="switchScreen('scanner')">
+
+            <i data-lucide="scan-line"></i>
+            Scanner
+
+        </button>
+
+
+        <button
+            id="mobile-assistant"
+            onclick="switchScreen('assistant')">
+
+            <i data-lucide="message-circle"></i>
+            Assistant
+
+        </button>
+
+
+        <button
+            id="mobile-crops"
+            onclick="switchScreen('crops')">
+
+            <i data-lucide="sprout"></i>
+            Crops
+
+        </button>
+
+
+        <button
+            id="mobile-weather"
+            onclick="switchScreen('weather')">
+
+            <i data-lucide="cloud-sun"></i>
+            Weather
+
+        </button>
+
+    </nav>
+
+</div>
+
+
+<script>
+
+    /*
+     * Initialize Lucide icons
+     */
+    lucide.createIcons();
+
+
+    /*
+     * Keep compatibility with the existing application.
+     */
+
+    if (typeof window.currentScreen === "undefined") {
+        window.currentScreen = "dashboard";
+    }
+
+
+    /*
+     * Quick Assistant Questions
+     */
+
+    function sendQuickQuestion(question) {
+
+        const input = document.getElementById("chatInput");
+
+        if (!input) return;
+
+        input.value = question;
+
+        if (typeof sendChatMessage === "function") {
+            sendChatMessage();
+        }
+    }
+
+
+    /*
+     * Navigation fallback.
+     * Existing app.js can override this.
+     */
+
+    function switchScreen(screenName) {
+
+        document.querySelectorAll(".screen").forEach(screen => {
+            screen.classList.remove("active");
+        });
+
+        const target = document.getElementById(
+            "screen-" + screenName
+        );
+
+        if (target) {
+            target.classList.add("active");
+        }
+
+
+        document.querySelectorAll(".nav-item").forEach(item => {
+            item.classList.remove("active");
+        });
+
+        const nav = document.getElementById(
+            "nav-" + screenName
+        );
+
+        if (nav) {
+            nav.classList.add("active");
+        }
+
+
+        document.querySelectorAll(".mobile-nav button").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        const mobileNav = document.getElementById(
+            "mobile-" + screenName
+        );
+
+        if (mobileNav) {
+            mobileNav.classList.add("active");
+        }
+
+        window.currentScreen = screenName;
+    }
+
+
+    /*
+     * Re-render icons after dynamic DOM changes.
+     */
+
+    function refreshIcons() {
+
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+    }
+
+</script>
+
+
+<!-- Existing application logic -->
+<script src="/app.js"></script>
+
+
+<script>
+
+    /*
+     * Refresh icons after app.js loads.
+     */
+
+    setTimeout(() => {
+        refreshIcons();
+    }, 100);
+
+
+    /*
+     * Enter key for assistant.
+     */
+
+    const chatInput = document.getElementById("chatInput");
+
+    if (chatInput) {
+
+        chatInput.addEventListener("keydown", function(event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                if (typeof sendChatMessage === "function") {
+                    sendChatMessage();
+                }
+
+            }
+
+        });
+
+    }
+
+</script>
+
 </body>
 </html>
