@@ -1,99 +1,68 @@
-# 🌾 Smart Krishi AI (स्मार्ट कृषि AI)
-> **AI-Powered Mobile & IoT Smart Agriculture System for Crop Health Monitoring & Automated Irrigation**
+# Smart Krishi AI
 
----
+A student/demo agriculture project with a FastAPI backend, a browser dashboard, Flutter mobile source, and optional ESP32 firmware.
 
-## 📌 Project Overview
-**Smart Krishi AI** is a complete, production-ready smart farming system that combines Mobile Applications, Deep Learning Computer Vision, Multilingual Conversational AI, and ESP32 IoT hardware sensors to empower farmers.
+## Current implementation status
 
-### 🌟 Key Deliverables Included
-1. **Farmer Mobile Application (Flutter)**: Full Flutter mobile app codebase with Auth, Home Dashboard, AI Scanner, Multilingual Voice Assistant, Crop Schedule Manager, and Weather Module.
-2. **Interactive Web Application & Mobile Simulator**: Beautiful glassmorphic Web UI with live metric controls and mobile simulator.
-3. **AI Plant Health Engine (PyTorch)**: Computer vision pipeline detecting diseases and nutrient deficiencies across 6 primary crops (*Tomato, Potato, Rice, Wheat, Cotton, Corn*).
-4. **IoT Soil & Environmental Monitoring (ESP32)**: Hardware firmware for telemetry collection (*Soil Moisture, Temperature, Humidity, Battery level*).
-5. **Automatic Irrigation Controller**: Active LOW Relay controller with moisture threshold rules and 30-minute safety watchdog.
-6. **Cloud Backend API (Python FastAPI)**: Robust REST API with SQLite/PostgreSQL database models and real-time state management.
-7. **Circuit Schematic & Wokwi Simulation**: Detailed wiring tables and Mermaid circuit diagrams.
-8. **Testing & Documentation**: PyTest automated suite, system architecture, and farmer user manual in English & Hindi.
+- **Authentication:** password hashes use scrypt; login returns a signed, expiring bearer token. Existing SHA-256 password hashes are upgraded after a successful login.
+- **Farm data:** crop records require sign-in and are scoped to the signed-in user. Sensor reads and controls additionally require the configured farm-owner account.
+- **Sensors:** values are unavailable until an authenticated ESP32 sends telemetry. The browser dashboard uses local demo sliders and does not submit them as device readings.
+- **Plant scans:** image uploads are checked for supported format and size. There are no trained model weights in this repository, so the API explicitly reports that no diagnosis was generated.
+- **Old scan history:** records created by the earlier heuristic are flagged as unverified; their old confidence values are not presented.
+- **Weather:** live weather is not configured. The API and clients show an unavailable state rather than invented conditions.
+- **Pump:** server-side and firmware controls are disabled by default. Enabling them requires explicit local configuration on both sides and verified hardware.
+- **Assistant:** the included assistant is rule-based, not a generative AI model; its farm-specific endpoints require the owner account.
 
----
+These safeguards make the demo honest and safer to present; they do not make the system production-ready or validate agricultural advice.
 
-## 📂 Project Repository Structure
+## Run the backend and web dashboard
 
-```
-smart_krishi_ai/
-├── README.md                           # Master README & Cloud Deployment Guide
-├── ARCHITECTURE.md                     # System Architecture & Component Specifications
-├── TESTING_AND_USER_MANUAL.md          # Comprehensive Testing & Farmer User Manual
-│
-├── mobile_app/                         # Flutter Mobile Application
-│   ├── pubspec.yaml                    # Flutter dependencies
-│   └── lib/
-│       ├── main.dart                   # Entrypoint & navigation
-│       ├── models/                     # Sensor, Crop, and AI result models
-│       ├── services/                   # HTTP API services
-│       └── screens/                    # Flutter UI Screens (Dashboard, Scanner, Assistant, etc.)
-│
-├── web_app/                            # Live Interactive Web & Mobile Simulator App
-│   ├── index.html                      # Glassmorphic Web UI
-│   ├── app.js                          # JavaScript client & Web Speech API integration
-│   └── styles.css                      # Styling rules
-│
-├── backend/                            # FastAPI Python Backend & Deep Learning
-│   ├── main.py                         # FastAPI server entrypoint
-│   ├── database.py                     # Database connection
-│   ├── models.py                       # SQLAlchemy ORM models
-│   ├── routers/                        # API Routers (auth, sensors, ai, assistant, crops, weather)
-│   └── ai_engine/                      # PyTorch CNN model pipeline & disease knowledgebase
-│
-├── iot_firmware/                       # ESP32 IoT Node Firmware & Hardware
-│   ├── smart_krishi_esp32.ino          # Arduino/C++ firmware
-│   ├── config.h                        # WiFi & pin config header
-│   └── CIRCUIT_SCHEMATIC.md            # Hardware wiring & pinout diagrams
-│
-└── tests/                              # Automated PyTest Test Suite
-    ├── test_api.py
-    └── test_ai_pipeline.py
-```
+Requires Python 3.10 or newer.
 
----
-
-## ⚡ Quick Start Guide
-
-### 1. Launch FastAPI Backend & Web App
 ```bash
-cd /home/pc-no18/Downloads/smart_krishi_ai
-python3 backend/main.py
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
+export JWT_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+export CORS_ORIGINS="http://localhost:8000,http://127.0.0.1:8000"
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
-- **REST API Docs**: `http://localhost:8000/docs`
-- **Web App & Mobile Simulator**: `http://localhost:8000/app`
 
-### 2. Run Automated PyTest Suite
+Open `http://localhost:8000/app` for the demo dashboard or `http://localhost:8000/docs` for the API.
+
+The first registration returns a `user_id` and access token. To enable private farm-owner endpoints in that local session, restart the server with `FARM_OWNER_USER_ID` set to that account's ID. Set `JWT_SECRET_KEY` to a stable, private random value before registering if tokens should survive server restarts. Do not commit `.env`, credentials, or device tokens.
+
+SQLite is used by default. Set `DATABASE_URL` to a database URL only when you have configured that database. The app does not apply schema migrations automatically.
+
+## Run tests
+
 ```bash
-PYTHONPATH=. pytest tests/test_api.py tests/test_ai_pipeline.py
+python -m pytest -q
 ```
 
-### 3. ESP32 Firmware Setup
-1. Open `iot_firmware/smart_krishi_esp32.ino` in Arduino IDE.
-2. Edit `iot_firmware/config.h` to set your WiFi credentials and backend server IP.
-3. Flash to ESP32 DevKit v1.
+The tests use a temporary SQLite database and verify authentication, crop ownership, device-token checks, pump-off defaults, upload validation, and honest unavailable states. They do not test real ESP32 hardware, a trained model, a live weather provider, or production deployment.
 
----
+## Flutter mobile app
 
-## 🚀 Cloud Deployment (Docker)
+The mobile source is under `mobile_app/`. Its API base URL defaults to `http://10.0.2.2:8000` for the Android emulator. For an iOS simulator or a phone on your network, pass the appropriate reachable backend URL:
 
-To deploy the backend server to cloud platforms (AWS, GCP, DigitalOcean):
-
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY . /app
-RUN pip install --no-cache-dir fastapi uvicorn torch torchvision pillow pydantic sqlalchemy python-multipart
-EXPOSE 8000
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```bash
+cd mobile_app
+flutter pub get
+flutter run --dart-define=API_BASE_URL=http://YOUR_COMPUTER_LAN_IP:8000
 ```
 
----
+The access token is held in memory for the current app session; sign in again after restarting the app. Hardware controls remain unavailable unless the server and firmware are explicitly configured.
 
-## 📄 License
-Released under the MIT License. Developed for Smart Agriculture & IoT Technology Advancement.
+## Optional ESP32 setup
+
+The tracked configuration contains no Wi-Fi credentials. Copy `iot_firmware/secrets_local.h.example` to `iot_firmware/secrets_local.h`, fill in local values, and keep that file out of Git. The backend's `IOT_DEVICE_TOKEN` must match the firmware's `DEVICE_API_TOKEN`.
+
+Keep `PUMP_CONTROL_ENABLED` set to `false` on the server and `0` in firmware unless the owner has verified the relay, pump, water supply, thresholds, and emergency stop. To opt in later, both settings must be changed deliberately. Remote deployments should use HTTPS.
+
+## Remaining limitations
+
+- A suitable trained plant-disease model, its license, weights, and validation data still need to be selected and integrated.
+- A legitimate weather provider is not connected; therefore there is no weather-based irrigation recommendation.
+- Farm state currently represents one configured device, not a multi-farm/device tenancy system.
+- No public deployment was performed. Hosting, TLS, database backups, device provisioning, and operational safety require separate setup.

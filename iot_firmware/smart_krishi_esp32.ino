@@ -70,6 +70,12 @@ void loop() {
 }
 
 void connectWiFi() {
+  if (strlen(WIFI_SSID) == 0) {
+    Serial.println("WiFi credentials are not configured; staying offline.");
+    digitalWrite(STATUS_LED_PIN, LOW);
+    return;
+  }
+
   Serial.print("Connecting to WiFi: ");
   Serial.println(WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
@@ -121,7 +127,8 @@ void checkSafetyWatchdog() {
 }
 
 void offlineEmergencyControl() {
-  // Fallback if cloud is unreachable: local automatic irrigation based on hardcoded thresholds
+  // Hardware operation remains off unless explicitly enabled in local config.
+#if PUMP_CONTROL_ENABLED
   if (currentMoisture < DEFAULT_MIN_MOISTURE && !pumpState) {
     Serial.println("[OFFLINE MODE] Moisture Low (<40%). Starting Pump.");
     setPumpState(true);
@@ -129,6 +136,11 @@ void offlineEmergencyControl() {
     Serial.println("[OFFLINE MODE] Moisture Optimal (>=70%). Stopping Pump.");
     setPumpState(false);
   }
+#else
+  if (pumpState) {
+    setPumpState(false);
+  }
+#endif
 }
 
 void sendTelemetryAndSyncControl() {
@@ -137,6 +149,9 @@ void sendTelemetryAndSyncControl() {
   HTTPClient http;
   http.begin(TELEMETRY_URL);
   http.addHeader("Content-Type", "application/json");
+  if (strlen(DEVICE_API_TOKEN) > 0) {
+    http.addHeader("X-Device-Token", DEVICE_API_TOKEN);
+  }
 
   // Create JSON Payload
   StaticJsonDocument<256> doc;
@@ -178,6 +193,11 @@ void sendTelemetryAndSyncControl() {
 }
 
 void setPumpState(bool state) {
+  if (state && !PUMP_CONTROL_ENABLED) {
+    Serial.println("Pump command ignored: hardware control is disabled in local config.");
+    return;
+  }
+
   pumpState = state;
   if (pumpState) {
     digitalWrite(RELAY_PUMP_PIN, LOW); // Active LOW relay ON

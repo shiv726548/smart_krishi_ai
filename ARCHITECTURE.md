@@ -1,5 +1,9 @@
 # Smart Krishi AI - End-to-End System Architecture
 
+## Current demo limitations
+
+The repository does not contain trained plant-disease model weights or a weather-provider integration. Scan requests therefore return an explicit unavailable state, and weather values are not fabricated. Sensor readings are unavailable until a device is authenticated. Pump controls are disabled unless the server and local firmware are both explicitly configured.
+
 ## 1. System Vision & Architecture Diagram
 
 **Smart Krishi AI** is an intelligent, end-to-end mobile and IoT smart farming platform designed to automate crop health monitoring, micro-climate sensing, multilingual AI farming assistance, and precision irrigation management.
@@ -69,24 +73,23 @@ graph TD
   5. **Crop Management**: Crop registration, sowing dates, field size (Acres), growth stage tracker, and fertilizer schedule reminders.
   6. **Weather Module**: 5-day rain forecast and weather-driven automated irrigation postponing logic.
 
-### 2.2 Computer Vision AI Model Pipeline
-- **Framework**: PyTorch & Torchvision
-- **Architecture**: `PlantHealthCNN` (Custom 4-stage Residual Convolutional Neural Network with BatchNorm & Dropout) + Heuristic Chlorosis/Necrosis Ratio Extractor.
-- **Crops Supported**: Tomato, Potato, Rice, Wheat, Cotton, Corn.
-- **Diseases Detected**: Early Blight, Late Blight, Leaf Curl Virus, Bacterial Leaf Blight, Blast Disease, Yellow Rust, Bollworm Damage, Fall Armyworm, Nitrogen Deficiency, and Healthy Leaf states.
+### 2.2 Plant Image Scan
+- The API accepts JPEG, PNG, and WebP uploads up to 5 MB and validates the image before processing.
+- No trained weights are currently included. The API returns `available: false`, with no disease label or confidence score.
+- Integrate a properly licensed and validated model before presenting any result as a diagnosis.
 
 ### 2.3 Cloud Backend (Python FastAPI)
 - **Web Server**: FastAPI + Uvicorn
 - **Database**: SQLite / PostgreSQL via SQLAlchemy ORM
 - **Endpoints**:
   - `POST /api/auth/register` & `POST /api/auth/login`
-  - `POST /api/sensors/telemetry`: IoT payload receiver & automatic pump trigger evaluator.
-  - `GET /api/sensors/latest`: Live status fetcher for mobile app.
-  - `POST /api/sensors/pump/toggle`: Manual pump override.
+  - `POST /api/sensors/telemetry`: device-token-protected telemetry receiver.
+  - `GET /api/sensors/latest`: owner-protected status fetcher.
+  - `POST /api/sensors/pump/toggle`: owner-protected; disabled by default.
   - `POST /api/ai/scan-plant`: Leaf image disease classification endpoint.
   - `POST /api/assistant/chat`: Multilingual agronomic assistant endpoint.
   - `GET /api/crops/user/{id}`: Crop profiles & schedules.
-  - `GET /api/weather/current`: Weather telematics & rain advice.
+  - `GET /api/weather/current`: unavailable state until a weather provider is configured.
 
 ### 2.4 IoT & Automatic Irrigation Hardware
 - **MCU**: ESP32 DevKit v1

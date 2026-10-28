@@ -1094,7 +1094,7 @@
 
             <div class="status-pill">
                 <span class="status-dot"></span>
-                IoT System Online
+                Demo simulator
             </div>
 
             <button class="view-toggle" onclick="toggleViewMode()">
@@ -1176,12 +1176,11 @@
 
                     <div>
                         <h2>Farm Overview</h2>
-                        <p>Your farm status and recommended actions</p>
+                        <p>Demo values only — no live sensor, weather, or pump connection</p>
                     </div>
 
                     <div class="date-label">
-                        Last updated:
-                        <span id="lastUpdatedTime">Just now</span>
+                        <span id="dataSourceLabel">DEMO VALUES — not live sensor data</span>
                     </div>
 
                 </div>
@@ -1198,12 +1197,12 @@
                         </div>
 
                         <div class="health-value">
-                            82<span>%</span>
+                            Demo
                         </div>
 
                         <div class="health-status">
                             <i data-lucide="check-circle" width="15"></i>
-                            Farm conditions are stable
+                            No live farm status available
                         </div>
 
                         <div class="crop-mini">
@@ -1235,12 +1234,11 @@
                             <span class="attention">Attention</span>
                         </div>
 
-                        <h3>Check soil moisture</h3>
+                        <h3>Demo readings only</h3>
 
                         <p>
-                            Soil moisture is currently below the preferred
-                            level. Rain is expected tomorrow, so automatic
-                            irrigation should be reviewed before watering.
+                            The values on this screen are simulated. Check the
+                            field and a trusted local forecast before irrigating.
                         </p>
 
                         <button class="primary-btn"
@@ -1330,7 +1328,7 @@
 
                         <div class="card-title">
                             <i data-lucide="brain"></i>
-                            AI Recommendation
+                            General guidance
                         </div>
 
                         <div class="recommendation">
@@ -1341,12 +1339,11 @@
 
                             <div>
 
-                                <h4>Postpone manual irrigation</h4>
+                                <h4>Check field conditions</h4>
 
                                 <p>
-                                    Weather data indicates an approximately
-                                    80% chance of rain tomorrow. Keep the pump
-                                    off unless soil moisture falls further.
+                                    Live weather and verified sensor readings
+                                    are unavailable in this demo.
                                 </p>
 
                             </div>
@@ -1375,7 +1372,7 @@
 
                                 <div>
                                     <strong>Water Pump</strong>
-                                    <span id="pumpStatusText">Automatic control OFF</span>
+                                <span id="pumpStatusText">Demo only — no pump connected</span>
                                 </div>
 
                             </div>
@@ -1383,8 +1380,9 @@
                             <button
                                 id="pumpToggleBtn"
                                 class="pump-btn"
-                                onclick="togglePumpWeb()">
-                                START
+                                disabled
+                                aria-disabled="true">
+                                DISABLED
                             </button>
 
                         </div>
@@ -1609,7 +1607,7 @@
                             onclick="simulateLeafScan()">
 
                             <i data-lucide="scan"></i>
-                            Analyze Crop
+                            Check scanner availability
 
                         </button>
 
@@ -1630,11 +1628,10 @@
 
                             <div class="result-header">
 
-                                <strong>Analysis Complete</strong>
+                                <strong>No diagnosis generated</strong>
 
                                 <span class="confidence">
-                                    Confidence:
-                                    <span id="resConf">92%</span>
+                                    Confidence unavailable
                                 </span>
 
                             </div>
@@ -1642,14 +1639,13 @@
                             <div
                                 class="result-disease"
                                 id="resDisease">
-                                Early Blight
+                                Diagnosis unavailable
                             </div>
 
                             <p
                                 class="result-text"
                                 id="resSymptoms">
-                                Dark circular lesions and yellowing
-                                around affected leaf areas.
+                                No trained disease-detection model is installed.
                             </p>
 
                             <br>
@@ -1657,8 +1653,7 @@
                             <p
                                 class="result-text"
                                 id="resActions">
-                                Remove severely affected leaves and
-                                avoid overhead watering.
+                                This image was not classified; no treatment advice was generated.
                             </p>
 
                         </div>
@@ -1668,8 +1663,7 @@
                             style="color:var(--muted);
                                    font-size:12px;
                                    line-height:1.6;">
-                            Upload a crop image to receive an AI-based
-                            plant health diagnosis.
+                            Image preview is local only. No trained model is installed, so no diagnosis will be generated.
                         </div>
 
                     </div>
@@ -1687,7 +1681,7 @@
 
                     <div>
                         <h2>Smart Krishi Assistant</h2>
-                        <p>Ask farming questions in your preferred language</p>
+                        <p>Rule-based demo guidance; no verified live farm or weather data</p>
                     </div>
 
                 </div>
@@ -1909,7 +1903,7 @@
 
                     <div>
                         <h2>Weather Intelligence</h2>
-                        <p>Weather insights for better farming decisions</p>
+                        <p>Live weather is not configured</p>
                     </div>
 
                 </div>
@@ -1925,33 +1919,33 @@
                         </div>
 
                         <div class="temperature">
-                            28.5°C
+                            —
                         </div>
 
                         <div class="weather-location">
-                            Maharashtra · Partly Cloudy
+                            Maharashtra · no verified current conditions
                         </div>
 
                         <div class="crop-stats">
 
                             <div class="crop-stat">
                                 <span>Humidity</span>
-                                <strong>68%</strong>
+                                <strong>—</strong>
                             </div>
 
                             <div class="crop-stat">
                                 <span>Rain Chance</span>
-                                <strong>35%</strong>
+                                <strong>—</strong>
                             </div>
 
                             <div class="crop-stat">
                                 <span>Wind</span>
-                                <strong>12 km/h</strong>
+                                <strong>—</strong>
                             </div>
 
                             <div class="crop-stat">
                                 <span>UV Index</span>
-                                <strong>Moderate</strong>
+                                <strong>—</strong>
                             </div>
 
                         </div>
@@ -1963,42 +1957,10 @@
 
                         <div class="card-title">
                             <i data-lucide="calendar-days"></i>
-                            5-Day Forecast
+                            Forecast unavailable
                         </div>
 
-                        <div class="forecast">
-
-                            <div class="forecast-day">
-                                <strong>Today</strong>
-                                <i data-lucide="cloud-sun"></i>
-                                <span>28° / 21°</span>
-                            </div>
-
-                            <div class="forecast-day">
-                                <strong>Tue</strong>
-                                <i data-lucide="cloud-rain"></i>
-                                <span>27° / 20°</span>
-                            </div>
-
-                            <div class="forecast-day">
-                                <strong>Wed</strong>
-                                <i data-lucide="cloud-rain"></i>
-                                <span>26° / 20°</span>
-                            </div>
-
-                            <div class="forecast-day">
-                                <strong>Thu</strong>
-                                <i data-lucide="cloud-sun"></i>
-                                <span>29° / 21°</span>
-                            </div>
-
-                            <div class="forecast-day">
-                                <strong>Fri</strong>
-                                <i data-lucide="sun"></i>
-                                <span>30° / 22°</span>
-                            </div>
-
-                        </div>
+                        <p>No live forecast is configured. Do not use demo values for irrigation planning.</p>
 
                     </div>
 
@@ -2020,15 +1982,11 @@
 
                         <div>
 
-                            <h4>
-                                Monitor rainfall before irrigation
-                            </h4>
+                            <h4>Use a trusted local forecast</h4>
 
                             <p>
-                                Rain probability is currently significant.
-                                Check soil moisture before starting the
-                                irrigation pump. Avoid unnecessary watering
-                                if rainfall is expected.
+                                This app has no verified weather data. Check
+                                local conditions before changing irrigation.
                             </p>
 
                         </div>

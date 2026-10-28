@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class AuthScreen extends StatefulWidget {
   final VoidCallback onLoginSuccess;
@@ -10,10 +11,46 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool isRegister = false;
-  final _phoneController = TextEditingController(text: "+91 9876543210");
-  final _passController = TextEditingController(text: "farmer123");
-  final _nameController = TextEditingController(text: "Ramesh Patil");
+  bool _isSubmitting = false;
+  String? _errorMessage;
+  final _phoneController = TextEditingController();
+  final _passController = TextEditingController();
+  final _nameController = TextEditingController();
   String selectedLanguage = "en";
+
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+    try {
+      await ApiService.authenticate(
+        register: isRegister,
+        phoneNumber: _phoneController.text,
+        password: _passController.text,
+        fullName: _nameController.text,
+        language: selectedLanguage,
+      );
+      if (mounted) widget.onLoginSuccess();
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = error.toString().replaceFirst('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -109,6 +146,16 @@ class _AuthScreenState extends State<AuthScreen> {
                       ],
                       onChanged: (val) => setState(() => selectedLanguage = val!),
                     ),
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.redAccent),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
@@ -118,16 +165,30 @@ class _AuthScreenState extends State<AuthScreen> {
                           backgroundColor: Colors.green.shade600,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: widget.onLoginSuccess,
-                        child: Text(
-                          isRegister ? "Register & Continue" : "Login to Farm Dashboard",
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
+                        onPressed: _isSubmitting ? null : _submit,
+                        child: _isSubmitting
+                            ? const SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                isRegister ? "Register & Continue" : "Login to Farm Dashboard",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                              ),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextButton(
-                      onPressed: () => setState(() => isRegister = !isRegister),
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => setState(() {
+                                isRegister = !isRegister;
+                                _errorMessage = null;
+                              }),
                       child: Text(
                         isRegister ? "Already registered? Login" : "New Farmer? Create Account",
                         style: const TextStyle(color: Colors.greenAccent),

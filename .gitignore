@@ -5,6 +5,10 @@ __pycache__/
 venv/
 env/
 .venv/
+.env
+.env.*
+!.env.example
+iot_firmware/secrets_local.h
 
 # SQLite Database
 *.db
