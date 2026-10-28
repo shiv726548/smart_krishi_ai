@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from backend.database import engine, Base
 from backend.routers import auth, sensors, ai, assistant, crops, weather
@@ -36,11 +36,38 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        origin.strip().rstrip("/")
+        for origin in os.getenv(
+            "CORS_ORIGINS",
+            "http://localhost:8000,http://127.0.0.1:8000",
+        ).split(",")
+        if origin.strip()
+    ],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Device-Token"],
 )
+
+MAX_REQUEST_BYTES = 6 * 1024 * 1024
+
+
+@app.middleware("http")
+async def enforce_request_size_limit(request, call_next):
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_REQUEST_BYTES:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Request body is too large"},
+                )
+        except ValueError:
+            return JSONResponse(
+                status_code=400,
+                content={"detail": "Invalid Content-Length header"},
+            )
+    return await call_next(request)
 
 
 # ============================================================
@@ -88,10 +115,10 @@ if os.path.exists(WEB_APP_PATH):
         )
 
     # CSS
-    @app.get("/style.css")
+    @app.get("/styles.css")
     async def style_css():
         return FileResponse(
-            os.path.join(WEB_APP_PATH, "style.css"),
+            os.path.join(WEB_APP_PATH, "styles.css"),
             media_type="text/css"
         )
 
@@ -111,7 +138,7 @@ if os.path.exists(WEB_APP_PATH):
 def root():
     return {
         "app": "Smart Krishi AI System API",
-        "status": "Online & Operational",
+        "status": "API online; optional features may be unconfigured",
         "documentation": "/docs",
         "web_dashboard": "/app"
     }

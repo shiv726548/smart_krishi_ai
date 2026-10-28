@@ -1,4 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../models/ai_result_model.dart';
+import '../services/api_service.dart';
 
 class PlantScannerScreen extends StatefulWidget {
   const PlantScannerScreen({Key? key}) : super(key: key);
@@ -10,33 +16,53 @@ class PlantScannerScreen extends StatefulWidget {
 class _PlantScannerScreenState extends State<PlantScannerScreen> {
   String selectedCrop = "Tomato";
   bool isScanning = false;
-  Map<String, dynamic>? scanResult;
+  String? statusMessage;
+  XFile? selectedImage;
+  AIResultModel? scanResult;
 
-  final List<String> supportedCrops = ["Tomato", "Potato", "Rice", "Wheat", "Cotton", "Corn"];
+  final ImagePicker _picker = ImagePicker();
+  final List<String> supportedCrops = [
+    "Tomato",
+    "Potato",
+    "Rice",
+    "Wheat",
+    "Cotton",
+    "Corn",
+  ];
 
-  void _runMockScan() {
-    setState(() => isScanning = true);
-    Future.delayed(const Duration(seconds: 2), () {
+  Future<void> _selectAndScan(ImageSource source) async {
+    try {
+      final image = await _picker.pickImage(source: source, imageQuality: 85);
+      if (image == null || !mounted) return;
+      setState(() {
+        selectedImage = image;
+        scanResult = null;
+        statusMessage = null;
+        isScanning = true;
+      });
+      final result = await ApiService.scanPlantDisease(
+        image.path,
+        selectedCrop,
+        'en',
+      );
+      if (!mounted) return;
+      setState(() {
+        scanResult = result;
+        isScanning = false;
+        if (result == null) {
+          statusMessage =
+              'Could not reach the server. Sign in and check the backend connection.';
+        } else if (!result.available) {
+          statusMessage = result.message;
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
         isScanning = false;
-        scanResult = {
-          "crop": selectedCrop,
-          "disease_detected": selectedCrop == "Tomato" ? "Early Blight" : "Leaf Spot",
-          "health_status": "Diseased",
-          "confidence": 92,
-          "cause": "Fungal infection by Alternaria solani",
-          "symptoms": "Concentric target-board ring spots on lower leaves with yellow halos.",
-          "suggested_actions": [
-            "Prune infected lower leaves and safely burn or discard them.",
-            "Avoid overhead leaf sprinkling; irrigate near root zone.",
-            "Fungicide spray: Mancozeb (75% WP) at 2g/liter of water.",
-            "Organic spray: Neem oil solution (5ml/liter)."
-          ],
-          "chemical_treatment": "Mancozeb 75 WP (2g/L) or Copper Oxychloride 3g/L",
-          "organic_treatment": "Neem Seed Kernel Extract 5% or Trichoderma viride"
-        };
+        statusMessage = 'The image could not be uploaded. Try a JPEG, PNG, or WebP under 5 MB.';
       });
-    });
+    }
   }
 
   @override
@@ -45,31 +71,45 @@ class _PlantScannerScreenState extends State<PlantScannerScreen> {
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text("AI Plant Health Scanner", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Plant Health Scanner",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Crop Selector
-            const Text("Select Crop Type:", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              "Select crop type",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
             SizedBox(
               height: 40,
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 children: supportedCrops.map((crop) {
-                  final isSel = crop == selectedCrop;
+                  final isSelected = crop == selectedCrop;
                   return Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
+                    padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
-                      label: Text(crop, style: TextStyle(color: isSel ? Colors.black : Colors.white)),
-                      selected: isSel,
+                      label: Text(
+                        crop,
+                        style: TextStyle(
+                          color: isSelected ? Colors.black : Colors.white,
+                        ),
+                      ),
+                      selected: isSelected,
                       selectedColor: Colors.greenAccent,
                       backgroundColor: const Color(0xFF1E293B),
-                      onSelected: (val) {
-                        if (val) setState(() => selectedCrop = crop);
+                      onSelected: (selected) {
+                        if (selected) setState(() => selectedCrop = crop);
                       },
                     ),
                   );
@@ -77,126 +117,163 @@ class _PlantScannerScreenState extends State<PlantScannerScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Camera Scanner Box
             Container(
               width: double.infinity,
-              height: 220,
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: const Color(0xFF1E293B),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.greenAccent.withOpacity(0.5), width: 2),
+                border: Border.all(color: Colors.greenAccent.withOpacity(0.5)),
               ),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt, size: 60, color: Colors.greenAccent.withOpacity(0.8)),
+                  if (selectedImage != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        File(selectedImage!.path),
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.eco_outlined,
+                      size: 56,
+                      color: Colors.greenAccent,
+                    ),
                   const SizedBox(height: 12),
-                  const Text("Capture or Upload Plant/Leaf Photo", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "Choose a leaf photo to validate the upload.",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 4),
-                  const Text("Supports Tomato, Potato, Rice, Wheat, Cotton, Corn", style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  const Text(
+                    "JPEG, PNG, or WebP; maximum 5 MB.",
+                    style: TextStyle(color: Colors.white60, fontSize: 12),
+                  ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
                     children: [
                       ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.green.shade600),
-                        icon: const Icon(Icons.photo_camera, color: Colors.white),
-                        label: const Text("Take Photo", style: TextStyle(color: Colors.white)),
-                        onPressed: isScanning ? null : _runMockScan,
+                        onPressed: isScanning
+                            ? null
+                            : () => _selectAndScan(ImageSource.camera),
+                        icon: const Icon(Icons.photo_camera),
+                        label: const Text("Take photo"),
                       ),
-                      const SizedBox(width: 12),
                       OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(side: const BorderSide(color: Colors.greenAccent)),
-                        icon: const Icon(Icons.image, color: Colors.greenAccent),
-                        label: const Text("Upload Gallery", style: TextStyle(color: Colors.greenAccent)),
-                        onPressed: isScanning ? null : _runMockScan,
+                        onPressed: isScanning
+                            ? null
+                            : () => _selectAndScan(ImageSource.gallery),
+                        icon: const Icon(Icons.image),
+                        label: const Text("Choose from gallery"),
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
-
             if (isScanning) ...[
-              const SizedBox(height: 30),
+              const SizedBox(height: 22),
               const Center(
                 child: Column(
                   children: [
                     CircularProgressIndicator(color: Colors.greenAccent),
-                    SizedBox(height: 12),
-                    Text("PyTorch Computer Vision AI Analyzing Plant Leaf...", style: TextStyle(color: Colors.greenAccent)),
+                    SizedBox(height: 10),
+                    Text(
+                      "Validating and uploading image…",
+                      style: TextStyle(color: Colors.greenAccent),
+                    ),
                   ],
                 ),
-              )
+              ),
             ],
-
-            // Display Results
-            if (scanResult != null && !isScanning) ...[
-              const SizedBox(height: 24),
+            if (statusMessage != null && !isScanning) ...[
+              const SizedBox(height: 20),
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(16),
+                  color: Colors.amber.shade900.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: Colors.amberAccent),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text("${scanResult!['crop']} Diagnosis", style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.shade800,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text("Confidence: ${scanResult!['confidence']}%", style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-                        )
-                      ],
+                    const Text(
+                      "Diagnosis unavailable",
+                      style: TextStyle(
+                        color: Colors.amberAccent,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    const Divider(color: Colors.white24, height: 20),
-                    _rowDetail("Detected Issue:", scanResult!['disease_detected'], Colors.amberAccent),
-                    _rowDetail("Health Status:", scanResult!['health_status'], Colors.redAccent),
-                    _rowDetail("Symptoms:", scanResult!['symptoms'], Colors.white70),
-                    const SizedBox(height: 12),
-                    const Text("Suggested Remedial Actions:", style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 6),
-                    ...List<String>.from(scanResult!['suggested_actions']).map((act) => Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text("• ", style: TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-                              Expanded(child: Text(act, style: const TextStyle(color: Colors.white, fontSize: 13))),
-                            ],
-                          ),
-                        )),
-                    const SizedBox(height: 12),
-                    _rowDetail("Chemical Remedy:", scanResult!['chemical_treatment'], Colors.white),
-                    _rowDetail("Organic Remedy:", scanResult!['organic_treatment'], Colors.greenAccent),
+                    Text(
+                      statusMessage!,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      "No disease label or confidence score was generated. Ask a local agricultural specialist if the plant is at risk.",
+                      style: TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
                   ],
                 ),
-              )
-            ]
+              ),
+            ],
+            if (scanResult?.available == true) ...[
+              const SizedBox(height: 20),
+              _availableResult(scanResult!),
+            ],
           ],
         ),
       ),
     );
   }
 
-  Widget _rowDetail(String label, String value, Color valColor) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
+  Widget _availableResult(AIResultModel result) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 130, child: Text(label, style: const TextStyle(color: Colors.white60, fontSize: 13, fontWeight: FontWeight.bold))),
-          Expanded(child: Text(value, style: TextStyle(color: valColor, fontSize: 13, fontWeight: FontWeight.w500))),
+          Text(
+            "${result.crop} diagnosis",
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (result.confidencePercentage != null)
+            Text("Confidence: ${result.confidencePercentage}%"),
+          const Divider(color: Colors.white24),
+          _rowDetail("Detected issue:", result.diseaseDetected ?? "Unavailable"),
+          _rowDetail("Health status:", result.healthStatus),
+          if (result.symptoms != null) _rowDetail("Symptoms:", result.symptoms!),
+          ...result.suggestedActions.map((action) => Text("• $action")),
         ],
+      ),
+    );
+  }
+
+  Widget _rowDetail(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        "$label $value",
+        style: const TextStyle(color: Colors.white70),
       ),
     );
   }

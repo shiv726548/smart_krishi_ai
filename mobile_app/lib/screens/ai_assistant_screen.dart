@@ -13,11 +13,10 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
   final List<Map<String, String>> _messages = [
     {
       "sender": "bot",
-      "text": "Namaste Farmer! I am Smart Krishi AI Assistant. How can I help with your crop today?"
+      "text": "I am a rule-based demo assistant, not an agricultural diagnosis service. Ask for general information and verify crop-specific decisions locally."
     }
   ];
   String currentLang = "en";
-  bool isListening = false;
   bool isThinking = false;
 
   void _sendMessage() async {
@@ -30,7 +29,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
       isThinking = true;
     });
 
-    final reply = await ApiService.askAiAssistant(text, currentLang, "Tomato");
+    final reply = await ApiService.askAiAssistant(text, currentLang);
 
     if (mounted) {
       setState(() {
@@ -40,21 +39,10 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
     }
   }
 
-  void _toggleMic() {
-    setState(() => isListening = !isListening);
-    if (isListening) {
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted && isListening) {
-          setState(() {
-            isListening = false;
-            _controller.text = currentLang == "hi"
-                ? "क्या मुझे आज सिंचाई करनी चाहिए?"
-                : (currentLang == "mr" ? "माझ्या टोमॅटो पिकाला कोणते खत देऊ?" : "Why are my leaf tips turning yellow?");
-          });
-          _sendMessage();
-        }
-      });
-    }
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   @override
@@ -67,7 +55,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
           children: const [
             Icon(Icons.psychology, color: Colors.cyanAccent),
             SizedBox(width: 8),
-            Text("AI Farming Assistant", style: TextStyle(color: Colors.white, fontSize: 18)),
+            Text("Rule-based Farming Demo", style: TextStyle(color: Colors.white, fontSize: 18)),
           ],
         ),
         actions: [
@@ -123,7 +111,7 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
                 children: [
                   SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.cyanAccent, strokeWidth: 2)),
                   SizedBox(width: 8),
-                  Text("AI Assistant is crafting response...", style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+                  Text("Preparing a rule-based reply...", style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
                 ],
               ),
             ),
@@ -134,16 +122,17 @@ class _AIAssistantScreenState extends State<AIAssistantScreen> {
             color: const Color(0xFF1E293B),
             child: Row(
               children: [
-                IconButton(
-                  icon: Icon(isListening ? Icons.mic : Icons.mic_none, color: isListening ? Colors.redAccent : Colors.greenAccent),
-                  onPressed: _toggleMic,
+                const IconButton(
+                  tooltip: "Voice input is not configured; type a question",
+                  icon: Icon(Icons.mic_off, color: Colors.white38),
+                  onPressed: null,
                 ),
                 Expanded(
                   child: TextField(
                     controller: _controller,
                     style: const TextStyle(color: Colors.white),
                     decoration: const InputDecoration(
-                      hintText: "Ask AI farming question...",
+                      hintText: "Ask a general farming question...",
                       hintStyle: TextStyle(color: Colors.white38),
                       border: InputBorder.none,
                     ),

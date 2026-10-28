@@ -62,7 +62,7 @@ function refreshIcons() {
 // DASHBOARD TELEMETRY
 // ============================================================
 
-async function updateSimulatedTelemetry() {
+function updateSimulatedTelemetry() {
 
     const moistureElement = document.getElementById("sliderMoisture");
     const tempElement = document.getElementById("sliderTemp");
@@ -109,48 +109,8 @@ async function updateSimulatedTelemetry() {
     }
 
 
-    // Automatic irrigation recommendation
-    if (moisture < 40) {
-        setPumpUI(true);
-    } else if (moisture >= 70) {
-        setPumpUI(false);
-    }
-
-
-    // Send telemetry to backend
-    try {
-
-        const response = await fetch(
-            `${API_BASE}/api/sensors/telemetry`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    device_id: "ESP32_KRISHI_01",
-                    soil_moisture: moisture,
-                    temperature: temp,
-                    humidity: humidity
-                })
-            }
-        );
-
-        if (response.ok) {
-
-            const data = await response.json();
-
-            if (data.pump_status !== undefined) {
-                setPumpUI(data.pump_status);
-            }
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Telemetry API unavailable. Running local simulation."
-        );
-    }
+    const sourceLabel = document.getElementById("dataSourceLabel");
+    if (sourceLabel) sourceLabel.innerText = "DEMO VALUES — not live sensor data";
 }
 
 
@@ -159,48 +119,14 @@ async function updateSimulatedTelemetry() {
 // ============================================================
 
 async function togglePumpWeb() {
-
-    const nextState = !isPumpOn;
-
-    setPumpUI(nextState);
-
-    try {
-
-        const response = await fetch(
-            `${API_BASE}/api/sensors/pump/toggle`,
-            {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    device_id: "ESP32_KRISHI_01",
-                    action: nextState ? "ON" : "OFF"
-                })
-            }
-        );
-
-        if (response.ok) {
-
-            const data = await response.json();
-
-            if (data.pump_status !== undefined) {
-                setPumpUI(data.pump_status);
-            }
-        }
-
-    } catch (error) {
-
-        console.log(
-            "Pump API unavailable. Running local pump simulation."
-        );
-    }
+    setPumpUI(false);
 }
 
 
 function setPumpUI(status) {
 
-    isPumpOn = Boolean(status);
+    // This web simulator must never issue or imply a physical pump command.
+    isPumpOn = false;
 
     const button = document.getElementById("pumpToggleBtn");
     const text = document.getElementById("pumpStatusText");
@@ -211,38 +137,13 @@ function setPumpUI(status) {
     }
 
 
-    if (isPumpOn) {
-
-        button.innerText = "STOP";
-
-        button.className =
-            "px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold transition";
-
-        text.innerText =
-            "Status: ON (Irrigating Field)";
-
-        text.className =
-            "text-[11px] text-emerald-400 font-bold animate-pulse";
-
-        icon.className =
-            "w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center";
-
-    } else {
-
-        button.innerText = "START";
-
-        button.className =
-            "px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition";
-
-        text.innerText =
-            "Status: OFF (Standby)";
-
-        text.className =
-            "text-[11px] text-slate-400";
-
-        icon.className =
-            "w-10 h-10 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center";
-    }
+    button.innerText = "DISABLED";
+    button.disabled = true;
+    button.title = "Hardware control is disabled in the demo";
+    text.innerText = "Demo only — no pump connected";
+    text.className = "text-[11px] text-amber-300";
+    icon.className =
+        "w-10 h-10 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center";
 
     refreshIcons();
 }
@@ -262,6 +163,15 @@ function previewAndScanLeaf(event) {
             : null;
 
     if (!file) {
+        return;
+    }
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        alert("Choose a JPEG, PNG, or WebP image.");
+        return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+        alert("Image is too large. The maximum size is 5 MB.");
         return;
     }
 
@@ -293,10 +203,10 @@ function simulateLeafScan() {
         return;
     }
 
-    card.classList.remove("hidden");
+    card.style.display = "block";
 
     const confidence =
-        document.getElementById("resConf");
+        document.querySelector(".confidence");
 
     const disease =
         document.getElementById("resDisease");
@@ -309,23 +219,26 @@ function simulateLeafScan() {
 
 
     if (confidence) {
-        confidence.innerText = "94%";
+        confidence.style.display = "none";
     }
 
     if (disease) {
         disease.innerText =
-            "Tomato Early Blight";
+            "Diagnosis unavailable";
     }
 
     if (symptoms) {
         symptoms.innerText =
-            "Brown spots, yellowing leaves and dark circular lesions.";
+            "No trained disease-detection model is installed. This image was not classified.";
     }
 
     if (actions) {
         actions.innerText =
-            "Remove affected leaves, improve airflow and avoid overhead watering.";
+            "No disease label, confidence score, or treatment recommendation was generated.";
     }
+
+    const header = card.querySelector(".result-header strong");
+    if (header) header.innerText = "No diagnosis generated";
 
     card.scrollIntoView({
         behavior: "smooth",
@@ -520,17 +433,17 @@ function generateLocalAIResponse(question, language) {
 
         if (language === "mr") {
 
-            return "सध्याच्या मातीतील ओलावा पाहता पिकाला हलके सिंचन देणे योग्य आहे. माती खूप ओली असल्यास पाणी देणे टाळा.";
+            return "सत्यापित माती-ओलावा रीडिंग उपलब्ध नाही. सिंचनाचा निर्णय घेण्यापूर्वी माती आणि पिकाची अवस्था तपासा.";
 
         }
 
         if (language === "hi") {
 
-            return "मिट्टी की नमी कम होने पर हल्की सिंचाई करें। यदि मिट्टी पहले से बहुत गीली है तो पानी देने से बचें.";
+            return "मिट्टी की सत्यापित नमी रीडिंग उपलब्ध नहीं है। सिंचाई का निर्णय लेने से पहले मिट्टी और फसल की अवस्था जांचें।";
 
         }
 
-        return "Based on the simulated soil conditions, give light irrigation when soil moisture is low. Avoid watering if the soil is already wet.";
+        return "No verified soil-moisture reading is available. Check the soil and crop stage before deciding whether to irrigate.";
     }
 
 
@@ -565,17 +478,17 @@ function generateLocalAIResponse(question, language) {
 
         if (language === "mr") {
 
-            return "पानांवर डाग, पिवळेपणा किंवा वाळणे दिसत असल्यास फोटो स्कॅनरमध्ये अपलोड करा. Smart Krishi AI प्राथमिक रोग ओळखण्यात मदत करेल.";
+            return "या डेमोमध्ये प्रशिक्षित रोग-ओळख मॉडेल नाही. पानांवरील लक्षणांसाठी स्थानिक कृषी तज्ज्ञांचा सल्ला घ्या.";
 
         }
 
         if (language === "hi") {
 
-            return "यदि पत्तियों पर दाग, पीलापन या सूखापन दिखाई दे तो फोटो स्कैनर में अपलोड करें. Smart Krishi AI प्राथमिक रोग पहचान में मदद करेगा.";
+            return "इस डेमो में प्रशिक्षित रोग-पहचान मॉडल नहीं है। पत्तियों के लक्षणों के लिए स्थानीय कृषि विशेषज्ञ से सलाह लें.";
 
         }
 
-        return "If you see spots, yellowing or wilting leaves, upload a photo to the Crop Scanner for a preliminary disease assessment.";
+        return "The crop scanner currently validates the upload only; no trained disease model is installed, so it cannot diagnose the plant.";
     }
 
 
@@ -589,17 +502,17 @@ function generateLocalAIResponse(question, language) {
 
         if (language === "mr") {
 
-            return "हवामानानुसार सिंचनाचे नियोजन करा. पावसाची शक्यता असल्यास अतिरिक्त सिंचन टाळणे चांगले.";
+            return "या डेमोमध्ये हवामानाचा अंदाज उपलब्ध नाही. सिंचनाचे नियोजन करण्यापूर्वी विश्वसनीय स्थानिक अंदाज तपासा.";
 
         }
 
         if (language === "hi") {
 
-            return "मौसम के अनुसार सिंचाई की योजना बनाएं। बारिश की संभावना होने पर अतिरिक्त सिंचाई से बचें.";
+            return "इस डेमो में मौसम का पूर्वानुमान उपलब्ध नहीं है। सिंचाई की योजना से पहले विश्वसनीय स्थानीय पूर्वानुमान देखें।";
 
         }
 
-        return "Plan irrigation according to the weather. If rain is expected, avoid unnecessary additional irrigation.";
+        return "Live weather is unavailable in this demo. Check a trusted local forecast and the field before changing irrigation.";
     }
 
 
@@ -627,17 +540,17 @@ function generateLocalAIResponse(question, language) {
 
     if (language === "mr") {
 
-        return "मी Smart Krishi AI आहे. तुम्ही पाणी, पिकांचे रोग, हवामान, खत किंवा पिकांच्या व्यवस्थापनाबद्दल प्रश्न विचारू शकता.";
+        return "मी नियम-आधारित कृषी डेमो सहाय्यक आहे. सर्वसाधारण माहिती विचारा आणि पिकाविषयी निर्णय स्थानिक पातळीवर तपासा.";
 
     }
 
     if (language === "hi") {
 
-        return "मैं Smart Krishi AI हूं. आप सिंचाई, फसल रोग, मौसम, उर्वरक या फसल प्रबंधन के बारे में प्रश्न पूछ सकते हैं.";
+        return "मैं नियम-आधारित कृषि डेमो सहायक हूं। सामान्य जानकारी पूछें और फसल से जुड़े निर्णय स्थानीय स्तर पर जांचें।";
 
     }
 
-    return "I am Smart Krishi AI. You can ask me about irrigation, crop diseases, weather, fertilizers or crop management.";
+        return "I am a rule-based farming assistant demo. I can offer general guidance, but I do not have verified live farm or weather data.";
 }
 
 

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.database import Base
 
 class User(Base):
@@ -12,7 +12,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     location = Column(String, default="Maharashtra, India")
     preferred_language = Column(String, default="en") # en, hi, mr
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     crops = relationship("Crop", back_populates="owner")
     telemetry_logs = relationship("SensorData", back_populates="user")
@@ -44,12 +44,12 @@ class SensorData(Base):
     soil_moisture = Column(Float, nullable=False) # percentage 0 - 100%
     temperature = Column(Float, nullable=False) # Celsius
     humidity = Column(Float, nullable=False) # percentage
-    nitrogen = Column(Float, default=45.0) # mg/kg optional sensor
-    phosphorus = Column(Float, default=25.0) # mg/kg
-    potassium = Column(Float, default=60.0) # mg/kg
+    nitrogen = Column(Float, nullable=True) # mg/kg, only when measured
+    phosphorus = Column(Float, nullable=True)
+    potassium = Column(Float, nullable=True)
     pump_status = Column(Boolean, default=False)
-    battery_level = Column(Float, default=95.0) # percentage
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    battery_level = Column(Float, nullable=True)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="telemetry_logs")
 
@@ -66,7 +66,7 @@ class AIDiagnosis(Base):
     suggested_actions = Column(Text, nullable=False)
     chemical_treatment = Column(Text, nullable=True)
     organic_treatment = Column(Text, nullable=True)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = relationship("User", back_populates="ai_diagnoses")
 

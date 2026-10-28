@@ -92,8 +92,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
-                        Text("Active Crop: Tomato (Hybrid)", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                        Text("Growth Stage: Flowering (Day 42)", style: TextStyle(color: Colors.white70, fontSize: 14)),
+                        Text("Sample crop profile: Tomato", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text("Example only — not your saved crop data", style: TextStyle(color: Colors.white70, fontSize: 14)),
                       ],
                     ),
                   ],
@@ -102,8 +102,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 20),
 
               // Sensor Metric Cards Grid
-              const Text("Real-Time IoT Field Telemetry", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text("Field sensor readings", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
+              if (!s.hasLiveData)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    "No authenticated live device reading is available. Values are hidden rather than simulated.",
+                    style: TextStyle(color: Colors.amberAccent, fontSize: 13),
+                  ),
+                ),
 
               GridView.count(
                 crossAxisCount: 2,
@@ -113,10 +121,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
                 children: [
-                  _buildMetricCard("Soil Moisture", "${s.soilMoisture.toStringAsFixed(1)}%", Icons.water_drop, s.soilMoisture < 40 ? Colors.redAccent : Colors.lightBlueAccent),
-                  _buildMetricCard("Temperature", "${s.temperature.toStringAsFixed(1)} °C", Icons.thermostat, Colors.orangeAccent),
-                  _buildMetricCard("Air Humidity", "${s.humidity.toStringAsFixed(1)}%", Icons.cloud, Colors.tealAccent),
-                  _buildMetricCard("Sensor Battery", "${s.batteryLevel.toStringAsFixed(0)}%", Icons.battery_charging_full, Colors.greenAccent),
+                  _buildMetricCard("Soil Moisture", s.hasLiveData ? "${s.soilMoisture.toStringAsFixed(1)}%" : "—", Icons.water_drop, s.hasLiveData && s.soilMoisture < 40 ? Colors.redAccent : Colors.lightBlueAccent),
+                  _buildMetricCard("Temperature", s.hasLiveData ? "${s.temperature.toStringAsFixed(1)} °C" : "—", Icons.thermostat, Colors.orangeAccent),
+                  _buildMetricCard("Air Humidity", s.hasLiveData ? "${s.humidity.toStringAsFixed(1)}%" : "—", Icons.cloud, Colors.tealAccent),
+                  _buildMetricCard(
+                    "Sensor Battery",
+                    s.hasLiveData && s.batteryLevel != null
+                        ? "${s.batteryLevel!.toStringAsFixed(0)}%"
+                        : "—",
+                    Icons.battery_charging_full,
+                    Colors.greenAccent,
+                  ),
                 ],
               ),
 
@@ -149,7 +164,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             const Text("Water Pump Controller", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
                             Text(
-                              s.pumpStatus ? "Pump Status: ON (Irrigating)" : "Pump Status: OFF (Standby)",
+                              !s.pumpEnabled
+                                  ? "Hardware control disabled"
+                                  : s.pumpStatus
+                                      ? "Pump Status: ON"
+                                      : "Pump Status: OFF",
                               style: TextStyle(color: s.pumpStatus ? Colors.greenAccent : Colors.white60, fontSize: 13),
                             ),
                           ],
@@ -161,7 +180,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         backgroundColor: s.pumpStatus ? Colors.redAccent : Colors.green.shade600,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      onPressed: _isTogglingPump ? null : () => _togglePump(s.pumpStatus),
+                      onPressed: _isTogglingPump || !s.pumpEnabled || !s.hasLiveData
+                          ? null
+                          : () => _togglePump(s.pumpStatus),
                       child: _isTogglingPump
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                           : Text(s.pumpStatus ? "STOP" : "START", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -173,7 +194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 20),
 
               // Alerts & AI Recommendations Section
-              const Text("System Alerts & AI Advice", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text("System alerts & general guidance", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
 
               if (s.alerts.isNotEmpty)
@@ -207,7 +228,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        "AI Recommendation: Optimal moisture target is 40-70%. Maintain light morning irrigation schedule.",
+                        "General guidance only: check crop-specific local advice before changing irrigation, fertilizer, or pesticide use.",
                         style: TextStyle(color: Colors.white, fontSize: 13),
                       ),
                     ),

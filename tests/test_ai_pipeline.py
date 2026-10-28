@@ -1,21 +1,45 @@
-from backend.ai_engine.model_pipeline import plant_ai_pipeline
-from PIL import Image
 import io
 
-def test_pytorch_model_pipeline():
-    # Create dummy image bytes
-    img = Image.new("RGB", (300, 300), color=(200, 100, 50))
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG")
-    img_bytes = buf.getvalue()
+import pytest
+from PIL import Image
 
-    result = plant_ai_pipeline.analyze_image(img_bytes, crop_hint="Tomato", lang="en")
-    
-    assert "disease_detected" in result
-    assert "confidence_percentage" in result
-    assert "suggested_actions" in result
-    assert result["crop"] == "Tomato"
-    print("PyTorch CV Pipeline test passed successfully!")
+from backend.ai_engine.model_pipeline import (
+    InvalidPlantImage,
+    plant_ai_pipeline,
+    validate_plant_image,
+)
 
-if __name__ == "__main__":
-    test_pytorch_model_pipeline()
+
+def make_jpeg() -> bytes:
+    image = Image.new("RGB", (64, 64), color=(30, 160, 80))
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG")
+    return buffer.getvalue()
+
+
+def test_pipeline_does_not_claim_a_diagnosis_without_weights():
+    result = plant_ai_pipeline.analyze_image(make_jpeg(), crop_hint="Tomato", lang="en")
+
+    assert result["available"] is False
+    assert result["disease_detected"] is None
+    assert result["confidence_percentage"] is None
+    assert "no trained model weights" in result["message"].lower()
+
+
+@pytest.mark.parametrize("content", [b"", b"not an image"])
+def test_invalid_image_is_rejected(content):
+    with pytest.raises(InvalidPlantImage):
+        validate_plant_image(content)
+
+
+def test_oversized_image_is_rejected():
+    with pytest.raises(InvalidPlantImage, match="5 MB"):
+        validate_plant_image(b"x" * (5 * 1024 * 1024 + 1))
+
+
+def test_unsupported_image_format_is_rejected():
+    image = Image.new("RGB", (8, 8), color=(0, 0, 0))
+    buffer = io.BytesIO()
+    image.save(buffer, format="BMP")
+    with pytest.raises(InvalidPlantImage, match="JPEG, PNG, or WebP"):
+        validate_plant_image(buffer.getvalue())
